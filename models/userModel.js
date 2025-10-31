@@ -9,11 +9,11 @@ export const findByUsername = async (username) => {
 };
 
 export const createUser = async (userData) => {
-  const { username, password, nama, status_active = 1 } = userData;
+  const { username, password, nama, status_active = 1, id_users_group } = userData;
   const [result] = await pool.query(
     `INSERT INTO md_users (username, password, nama, status_active, id_users_group)
-     VALUES (?, ?, ?, ?, 1)`,
-    [username, password, nama, status_active]
+     VALUES (?, ?, ?, ?, ?)`,
+    [username, password, nama, status_active, id_users_group]
   );
   return result.insertId;
 };

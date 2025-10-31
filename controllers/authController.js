@@ -6,7 +6,7 @@ dotenv.config();
 
 
 export const register = async (req, res) => {
-  const { username, password, nama } = req.body;
+  const { username, password, nama, id_users_group } = req.body;
 
   try {
     // check if username already exists
@@ -24,6 +24,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
       show_password: password, // optional for debugging, you can remove it later
       nama,
+      id_users_group,
     });
 
     res.status(201).json({
