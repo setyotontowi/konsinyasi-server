@@ -5,7 +5,7 @@ import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.j
 export const getAllUsers = async (req, res) => {
   try {
     let page = parseInt(req.query.page) || 1;
-    let limit = parseInt(req.query.limit) || 10;
+    let limit = parseInt(req.query.limit) || 20;
 
     const filters = {
         username: req.query.username || undefined,

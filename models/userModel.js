@@ -18,7 +18,7 @@ export const createUser = async (userData) => {
   return result.insertId;
 };
 
-export const listAllUsers = async ({ page = 1, limit = 10, filters = {} } = {}) => {
+export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) => {
   const offset = (page - 1) * limit;
 
   // build WHERE clauses dynamically

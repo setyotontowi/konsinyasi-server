@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoute.js";
+import unitRoutes from "./routes/unitRoute.js"
 
 const envFile = process.env.NODE_ENV === 'development' ? '.env.dev' : '.env';
 dotenv.config({ path: envFile, override: true });
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
+app.use("/unit", unitRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`✅ Server running on port ${process.env.PORT}`);
