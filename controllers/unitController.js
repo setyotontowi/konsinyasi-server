@@ -1,4 +1,4 @@
-import { listAllUnit, changeUserUnit } from "../models/unitModel.js";
+import { listAllUnit, getUnitById, changeUserUnit, changeUnit } from "../models/unitModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const getAllUnit = async (req, res) => {
@@ -38,3 +38,37 @@ export const updateUserUnit = async (req, res) => {
     sendResponse(res, {}, 'Failed to update user group', 500);
   }
 };
+
+export const updateUnit = async (req, res) => {
+  try {
+    const idUnit = req.params.id;
+    if (!idUnit) {
+      return sendResponse(res, {}, 'Unit ID is required', 400);
+    }
+
+    const allowedFields = ['nama', 'keterangan', 'is_pbf', 'is_active'];
+    
+    // Filter request body to only allowed fields
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
+
+
+    if (Object.keys(updateData).length === 0)
+      return sendResponse(res, {}, 'No valid fields provided', 400);
+
+    const updated = await changeUnit(idUnit, updateData);
+
+    if (!updated) return sendResponse(res, {}, 'Unit not found', 404);
+
+    const unit = await getUnitById(idUnit); // return updated profile
+    sendResponse(res, unit, 'Profile updated successfully');
+  } catch (err) {
+    console.error(err);
+    sendResponse(res, {}, 'Failed to update unit', 500);
+  }
+};
+
