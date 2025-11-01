@@ -17,3 +17,10 @@ export const createUser = async (userData) => {
   );
   return result.insertId;
 };
+
+export const listAllUsers = async () => {
+  const [rows] = await pool.query(
+    "SELECT id, username, nama, nip, status_active FROM md_users"
+  );
+  return rows;
+};
