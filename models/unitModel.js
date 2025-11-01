@@ -7,6 +7,11 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) =
     let whereClauses = [];
     let params = [];
 
+    if (filters.id) {
+        whereClauses.push('un.id = ?');
+        params.push(`%${filters.id}%`);
+    }
+
     if (filters.nama) {
         whereClauses.push('un.nama LIKE ?');
         params.push(`%${filters.nama}%`);
@@ -46,3 +51,12 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) =
         total
     };
 }
+
+
+export const changeUserUnit = async (userId, newUnitId) => {
+  const [result] = await pool.query(
+    'UPDATE md_users SET id_master_unit = ? WHERE id = ?',
+    [newUnitId, userId]
+  );
+  return result.affectedRows; // 1 if success, 0 if user not found
+};

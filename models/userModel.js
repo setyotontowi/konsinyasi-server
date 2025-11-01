@@ -53,9 +53,10 @@ export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) 
 
   // get paginated rows
   const [rows] = await pool.query(
-    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama 
+    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama, un.nama as nama_unit
      FROM md_users u
      LEFT JOIN md_users_group g ON u.id_users_group = g.id
+     LEFT JOIN md_unit un ON u.id_master_unit = un.id
      ${whereSQL} LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
