@@ -57,3 +57,11 @@ export const listAllUsers = async ({ page = 1, limit = 10, filters = {} } = {}) 
     total
   };
 };
+
+export const getUserById = async (id) => {
+  const [rows] = await pool.query(
+    'SELECT id, username, nama, nip, status_active FROM md_users WHERE id = ?',
+    [id]
+  );
+  return rows[0]; // return single user
+};

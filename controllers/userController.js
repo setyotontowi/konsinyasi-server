@@ -1,6 +1,6 @@
 
-import { listAllUsers } from "../models/userModel.js";
-import { sendPaginatedResponse } from "../helpers/responseHelper.js";
+import { listAllUsers, getUserById } from "../models/userModel.js";
+import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -22,3 +22,18 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id; // from authenticate middleware
+    const user = await getUserById(userId);
+
+    if (!user) return sendResponse(res, {}, 'User not found', 404);
+
+    sendResponse(res, user);
+  } catch (err) {
+    console.error(err);
+    sendResponse(res, {}, 'Failed to fetch profile', 500);
+  }
+};
+
