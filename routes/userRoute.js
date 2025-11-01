@@ -1,6 +1,6 @@
 import express from "express";
-import { getAllUsers, getProfile } from "../controllers/userController.js";
-import { getAllUserGroups } from "../controllers/userGroupController.js";
+import { getAllUsers, getProfile, changeProfile } from "../controllers/userController.js";
+import { getAllUserGroups, updateUserGroup } from "../controllers/userGroupController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -8,5 +8,8 @@ const router = express.Router();
 router.get("/", verifyToken, getAllUsers);
 router.get("/profile", verifyToken, getProfile);
 router.get("/group", verifyToken, getAllUserGroups);
+
+router.put('/change-group', verifyToken, updateUserGroup);
+router.put("/profile", verifyToken, changeProfile);
 
 export default router;

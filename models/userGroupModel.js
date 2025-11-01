@@ -17,6 +17,13 @@ export const listAllUserGroups = async () => {
         g.group_nama;`
   );
 
-  console.log(rows);
   return rows;
 }
+
+export const changeUserGroup = async (userId, newGroupId) => {
+  const [result] = await pool.query(
+    'UPDATE md_users SET id_users_group = ? WHERE id = ?',
+    [newGroupId, userId]
+  );
+  return result.affectedRows; // 1 if success, 0 if user not found
+};

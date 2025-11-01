@@ -1,5 +1,5 @@
 
-import { listAllUsers, getUserById } from "../models/userModel.js";
+import { listAllUsers, getUserById, updateUserProfile } from "../models/userModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const getAllUsers = async (req, res) => {
@@ -38,3 +38,40 @@ export const getProfile = async (req, res) => {
   }
 };
 
+
+export const changeProfile = async (req, res) => {
+  try {
+
+    const allowedFields = ['username', 'nama', 'nip', 'password', 'status_active'];
+    
+    // Filter request body to only allowed fields
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
+
+    // Determine which user to update
+    let userId;
+    if (req.user.role === 1 && req.body.id) {
+      userId = req.body.id; // admin can update any user
+    } else {
+      userId = req.user.id; // normal user can update self
+    }
+
+
+    if (Object.keys(updateData).length === 0)
+      return sendResponse(res, {}, 'No valid fields provided', 400);
+
+    const updated = await updateUserProfile(userId, updateData);
+
+    if (!updated) return sendResponse(res, {}, 'User not found', 404);
+
+    const user = await getUserById(userId); // return updated profile
+    sendResponse(res, user, 'Profile updated successfully');
+  } catch (err) {
+    console.error(err);
+    sendResponse(res, {}, 'Failed to update profile', 500);
+  }
+};

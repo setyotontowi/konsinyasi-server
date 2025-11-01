@@ -73,3 +73,27 @@ export const getUserById = async (id) => {
   );
   return rows[0]; // return single user
 };
+
+
+export const updateUserProfile = async (userId, data) => {
+  // Build dynamic SET clause
+  const fields = [];
+  const values = [];
+
+  for (const key in data) {
+    fields.push(`${key} = ?`);
+    values.push(data[key]);
+  }
+
+  if (fields.length === 0) return 0; // nothing to update
+
+  values.push(userId); // for WHERE clause
+
+  const [result] = await pool.query(
+    `UPDATE md_users SET ${fields.join(', ')} WHERE id = ?`,
+    values
+  );
+
+
+  return result.affectedRows; // 1 if updated, 0 if user not found
+};
