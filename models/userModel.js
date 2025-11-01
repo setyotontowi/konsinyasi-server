@@ -18,9 +18,42 @@ export const createUser = async (userData) => {
   return result.insertId;
 };
 
-export const listAllUsers = async () => {
+export const listAllUsers = async ({ page = 1, limit = 10, filters = {} } = {}) => {
+  const offset = (page - 1) * limit;
+
+  // build WHERE clauses dynamically
+  let whereClauses = [];
+  let params = [];
+
+  if (filters.username) {
+    whereClauses.push('username LIKE ?');
+    params.push(`%${filters.username}%`);
+  }
+
+  if (filters.status_active !== undefined) {
+    whereClauses.push('status_active = ?');
+    params.push(filters.status_active);
+  }
+
+  if (filters.nip) {
+    whereClauses.push('nip = ?');
+    params.push(filters.nip);
+  }
+
+  const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+
+  // get total count
+  const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_users ${whereSQL}`, params);
+  const total = countRows[0].total;
+
+  // get paginated rows
   const [rows] = await pool.query(
-    "SELECT id, username, nama, nip, status_active FROM md_users"
+    `SELECT id, username, nama, nip, status_active FROM md_users ${whereSQL} LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
   );
-  return rows;
+
+  return {
+    rows,
+    total
+  };
 };
