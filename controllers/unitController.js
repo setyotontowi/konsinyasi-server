@@ -1,5 +1,24 @@
-import { listAllUnit, getUnitById, changeUserUnit, changeUnit } from "../models/unitModel.js";
+import { insertUnit, listAllUnit, getUnitById, changeUserUnit, changeUnit } from "../models/unitModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
+
+export const createUnit = async (req, res) => {
+  const { nama, keterangan, is_pbf } = req.body;
+
+  try {
+    // insert into database
+    const unitId = await insertUnit({
+      nama,
+      keterangan,
+      is_pbf
+    });
+
+    sendResponse(res, unitId, 'Unit created successfully');    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 export const getAllUnit = async (req, res) => {
   try {

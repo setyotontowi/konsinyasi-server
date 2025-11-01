@@ -1,5 +1,16 @@
 import pool from "../config/db.js";
 
+export const insertUnit = async (userData) => {
+  const { nama, keterangan, is_pbf } = userData;
+  const [result] = await pool.query(
+    `INSERT INTO md_unit (nama, keterangan, is_pbf)
+     VALUES (?, ?, ?)`,
+    [nama, keterangan, is_pbf]
+  );
+  return result.insertId;
+};
+
+
 export const getUnitById = async (id) => {
   const [rows] = await pool.query(
     'SELECT * FROM md_unit WHERE id = ?',
