@@ -7,8 +7,6 @@ import userRoutes from "./routes/userRoute.js";
 const envFile = process.env.NODE_ENV === 'development' ? '.env.dev' : '.env';
 dotenv.config({ path: envFile, override: true });
 
-console.log(`Using environment file: ${envFile}, dbhost: ${process.env.DB_HOST}`);
-
 const app = express();
 
 app.use(

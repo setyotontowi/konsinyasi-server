@@ -40,6 +40,11 @@ export const listAllUsers = async ({ page = 1, limit = 10, filters = {} } = {}) 
     params.push(filters.nip);
   }
 
+  if (filters.id_users_group) {
+    whereClauses.push('id_users_group = ?');
+    params.push(filters.id_users_group);
+  }
+
   const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
   // get total count
@@ -48,7 +53,10 @@ export const listAllUsers = async ({ page = 1, limit = 10, filters = {} } = {}) 
 
   // get paginated rows
   const [rows] = await pool.query(
-    `SELECT id, username, nama, nip, status_active FROM md_users ${whereSQL} LIMIT ? OFFSET ?`,
+    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama 
+     FROM md_users u
+     LEFT JOIN md_users_group g ON u.id_users_group = g.id
+     ${whereSQL} LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
 
@@ -60,7 +68,7 @@ export const listAllUsers = async ({ page = 1, limit = 10, filters = {} } = {}) 
 
 export const getUserById = async (id) => {
   const [rows] = await pool.query(
-    'SELECT id, username, nama, nip, status_active FROM md_users WHERE id = ?',
+    'SELECT id, username, nama, nip, status_active, created_at FROM md_users WHERE id = ?',
     [id]
   );
   return rows[0]; // return single user
