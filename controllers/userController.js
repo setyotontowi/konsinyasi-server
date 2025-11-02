@@ -39,7 +39,7 @@ export const getProfile = async (req, res) => {
 };
 
 
-export const changeProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
 
     const allowedFields = ['username', 'nama', 'nip', 'password', 'status_active'];

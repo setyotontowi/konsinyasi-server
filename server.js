@@ -22,11 +22,11 @@ app.use(
 
 app.use(express.json());
 
-app.use("/auth", authRoutes);
-app.use("/user", userRoutes);
-app.use("/unit", unitRoutes);
-app.use("/barang", barangRoutes);
-app.use("/menu", menuRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/unit", unitRoutes);
+app.use("/api/barang", barangRoutes);
+app.use("/api/menu", menuRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`✅ Server running on port ${process.env.PORT}`);
