@@ -8,7 +8,7 @@ export const getAllUsers = async (req, res) => {
     let limit = parseInt(req.query.limit) || 20;
 
     const filters = {
-        username: req.query.username || undefined,
+        user: req.query.user || undefined,
         status_active: req.query.status_active !== undefined ? Number(req.query.status_active) : undefined,
         nip: req.query.nip || undefined,
         id_users_group: req.query.id_users_group ? Number(req.query.id_users_group) : undefined

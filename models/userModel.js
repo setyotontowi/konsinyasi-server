@@ -25,9 +25,9 @@ export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) 
   let whereClauses = [];
   let params = [];
 
-  if (filters.username) {
-    whereClauses.push('username LIKE ?');
-    params.push(`%${filters.username}%`);
+  if (filters.user) {
+    whereClauses.push('(username LIKE ? or u.nama LIKE ?)');
+    params.push(`%${filters.user}%`, `%${filters.user}%`);
   }
 
   if (filters.status_active !== undefined) {
@@ -48,7 +48,7 @@ export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) 
   const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
   // get total count
-  const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_users ${whereSQL}`, params);
+  const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_users u ${whereSQL}`, params);
   const total = countRows[0].total;
 
   // get paginated rows

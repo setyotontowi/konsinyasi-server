@@ -14,7 +14,7 @@ export const sendPaginatedResponse = (res, items = [], page = 1, limit = 20, tot
             total,
             page,
             limit,
-            totalPages: Math.ceil(total / limit)
+            total_pages: Math.ceil(total / limit)
         },
         data: items
     });
