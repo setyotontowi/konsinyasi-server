@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoute.js";
 import userRoutes from "./routes/userRoute.js";
 import unitRoutes from "./routes/unitRoute.js"
 import barangRoutes from "./routes/barangRoute.js"
+import menuRoutes from "./routes/menuRoute.js"
 
 const envFile = process.env.NODE_ENV === 'development' ? '.env.dev' : '.env';
 dotenv.config({ path: envFile, override: true });
@@ -25,6 +26,7 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/unit", unitRoutes);
 app.use("/barang", barangRoutes);
+app.use("/menu", menuRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`✅ Server running on port ${process.env.PORT}`);
