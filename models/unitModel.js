@@ -26,6 +26,8 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) =
     let whereClauses = [];
     let params = [];
 
+    whereClauses.push('1=1');
+
     if (filters.id) {
         whereClauses.push('un.id = ?');
         params.push(`%${filters.id}%`);
@@ -42,7 +44,7 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) =
     }
 
 
-    const whereSQL = 'WHERE un.is_active = 1 AND ' + whereClauses.join(' AND ');
+    const whereSQL = 'WHERE ' + whereClauses.join(' AND ');
 
     // get total count
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_unit un ${whereSQL}`, params);
@@ -51,19 +53,14 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) =
     // get data
     const [rows] = await pool.query(
         `SELECT 
-            un.*,
-            COUNT(u.id) AS user_count
+            un.*
         FROM 
-            md_unit un
-        LEFT JOIN 
-            md_users u 
-            ON u.id_master_unit = un.id 
+            md_unit un 
         ${whereSQL}
-        GROUP BY 
-            un.id, un.nama
         ORDER BY 
-            un.nama;`
-    , params);
+            un.nama
+        LIMIT ? OFFSET ? ;`
+    , [...params, limit, offset]);
 
     return {
         rows,

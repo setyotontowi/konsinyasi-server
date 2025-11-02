@@ -42,7 +42,7 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
 
-    const allowedFields = ['username', 'nama', 'nip', 'password', 'status_active'];
+    const allowedFields = ['username', 'nama', 'nip', 'password', 'status_active', 'keterangan', 'id_master_unit', 'id_users_group'];
     
     // Filter request body to only allowed fields
     const updateData = {};
@@ -54,8 +54,8 @@ export const updateProfile = async (req, res) => {
 
     // Determine which user to update
     let userId;
-    if (req.user.role === 1 && req.body.id) {
-      userId = req.body.id; // admin can update any user
+    if (req.user.role === 1 && req.params.id) {
+      userId = req.params.id; // admin can update any user
     } else {
       userId = req.user.id; // normal user can update self
     }
@@ -73,5 +73,26 @@ export const updateProfile = async (req, res) => {
   } catch (err) {
     console.error(err);
     sendResponse(res, {}, 'Failed to update profile', 500);
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    // Determine which user to delete
+    const userId = req.user.role === 1 && req.params.id
+      ? req.params.id   // admin can delete any user
+      : req.user.id;    // normal user can delete self
+
+    const updateData = { status_active: 0 };
+
+    const updated = await updateUserProfile(userId, updateData);
+
+    if (!updated) return sendResponse(res, {}, 'User not found', 404);
+
+    const user = await getUserById(userId);
+    sendResponse(res, user, 'User deactivated successfully');
+  } catch (err) {
+    console.error(err);
+    sendResponse(res, {}, 'Failed to deactivate user', 500);
   }
 };

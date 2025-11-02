@@ -9,11 +9,11 @@ export const findByUsername = async (username) => {
 };
 
 export const createUser = async (userData) => {
-  const { username, password, nama, status_active = 1, id_users_group } = userData;
+  const { username, password, nama, status_active = 1, id_users_group, id_master_unit, keterangan } = userData;
   const [result] = await pool.query(
-    `INSERT INTO md_users (username, password, nama, status_active, id_users_group)
-     VALUES (?, ?, ?, ?, ?)`,
-    [username, password, nama, status_active, id_users_group]
+    `INSERT INTO md_users (username, password, nama, status_active, id_users_group, id_master_unit, keterangan)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [username, password, nama, status_active, id_users_group, id_master_unit, keterangan]
   );
   return result.insertId;
 };
@@ -24,6 +24,8 @@ export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) 
   // build WHERE clauses dynamically
   let whereClauses = [];
   let params = [];
+
+  whereClauses.push('status_active = 1');
 
   if (filters.user) {
     whereClauses.push('(username LIKE ? or u.nama LIKE ?)');
@@ -53,7 +55,7 @@ export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) 
 
   // get paginated rows
   const [rows] = await pool.query(
-    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama, un.nama as nama_unit
+    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama, un.nama as nama_unit, u.keterangan
      FROM md_users u
      LEFT JOIN md_users_group g ON u.id_users_group = g.id
      LEFT JOIN md_unit un ON u.id_master_unit = un.id
