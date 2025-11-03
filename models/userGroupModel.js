@@ -27,3 +27,43 @@ export const changeUserGroup = async (userId, newGroupId) => {
   );
   return result.affectedRows; // 1 if success, 0 if user not found
 };
+
+// Get all menu privileges for a group
+export const getUserGroupPrivileges = async (groupId) => {
+  const [rows] = await pool.query(
+    `SELECT menu_id FROM st_users_group_privilege WHERE user_group_id = ?`,
+    [groupId]
+  );
+  return rows.map((r) => r.menu_id);
+};
+
+// Update (replace) menu privileges for a group
+export const setUserGroupPrivileges = async (groupId, menuIds) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Delete old privileges
+    await conn.query(
+      `DELETE FROM st_users_group_privilege WHERE user_group_id = ?`,
+      [groupId]
+    );
+
+    // Insert new privileges if provided
+    if (menuIds && menuIds.length > 0) {
+      const values = menuIds.map((menuId) => [groupId, menuId]);
+      await conn.query(
+        `INSERT INTO st_users_group_privilege (user_group_id, menu_id) VALUES ?`,
+        [values]
+      );
+    }
+
+    await conn.commit();
+    return true;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};

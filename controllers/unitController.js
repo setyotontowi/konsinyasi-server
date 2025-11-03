@@ -1,4 +1,4 @@
-import { insertUnit, listAllUnit, getUnitById, changeUserUnit, changeUnit } from "../models/unitModel.js";
+import { insertUnit, listAllUnit, getUnitById, changeUserUnit, changeUnit, deleteUnitById } from "../models/unitModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const createUnit = async (req, res) => {
@@ -91,3 +91,19 @@ export const updateUnit = async (req, res) => {
   }
 };
 
+export const deleteUnit = async (req, res) => {
+  try {
+    const idUnit = req.params.id;
+    if (!idUnit) {
+      return sendResponse(res, {}, 'Unit ID is required', 400);
+    }
+
+    const deleted = await deleteUnitById(idUnit);
+    if (!deleted) return sendResponse(res, {}, 'Unit not found', 404);
+
+    sendResponse(res, {}, 'Unit deleted successfully');
+  } catch (err) {
+    console.error(err);
+    sendResponse(res, {}, 'Failed to delete unit', 500);
+  }
+};

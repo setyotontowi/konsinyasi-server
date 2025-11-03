@@ -99,3 +99,11 @@ export const changeUnit = async (idUnit, data) => {
 
   return result.affectedRows; // 1 if updated, 0 if unit not found
 };
+
+export const deleteUnitById = async (idUnit) => {
+  const [result] = await pool.query(
+    'DELETE FROM md_unit WHERE id = ?',
+    [idUnit]
+  );
+  return result.affectedRows; // 1 if deleted, 0 if unit not found
+}
