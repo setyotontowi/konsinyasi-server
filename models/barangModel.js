@@ -12,9 +12,9 @@ const offset = (page - 1) * limit;
     if (filters.nama) {
         whereClauses.push('mst_nama LIKE ?');
         params.push(`%${filters.nama}%`);
-    }
+    }``
 
-    const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+    const whereSQL = whereClauses.length ? 'WHERE deleted_at IS NULL AND ' + whereClauses.join(' AND ') : '';
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_satuan un ${whereSQL}`, params);
     const total = countRows[0].total;
@@ -29,25 +29,25 @@ export const getSatuanById = async (id) => {
 };
 
 export const createSatuan = async (data) => {
-    const { nama } = data;
+    const { mst_nama } = data;
     const [result] = await pool.query(
         "INSERT INTO md_satuan (mst_nama) VALUES (?)",
-        [nama]
+        [mst_nama]
     );
-    return { mst_id: result.insertId, nama };
+    return { mst_id: result.insertId, mst_nama };
 };
 
 export const updateSatuan = async (id, data) => {
-    const { nama } = data;
+    const { mst_nama } = data;
     const [result] = await pool.query(
         "UPDATE md_satuan SET mst_nama = ?, updated_at = NOW() WHERE mst_id = ?",
-        [nama, id]
+        [mst_nama, id]
     );
     return result.affectedRows > 0;
 };
 
 export const deleteSatuan = async (id) => {
-    const [result] = await pool.query("DELETE FROM md_satuan WHERE mst_id = ?", [id]);
+    const [result] = await pool.query("UPDATE md_satuan SET deleted_at = NOW()WHERE mst_id = ?", [id]);
     return result.affectedRows > 0;
 };
 
@@ -69,7 +69,7 @@ const offset = (page - 1) * limit;
     }
 
 
-    const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' OR ') : '';
+    const whereSQL = whereClauses.length ? whereClauses.join(' OR ') : '';
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_barang ${whereSQL}`, params);
     const total = countRows[0].total;
@@ -77,6 +77,7 @@ const offset = (page - 1) * limit;
     const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan FROM 
         md_barang
         JOIN md_satuan ON md_barang.id_satuan_kecil = md_satuan.mst_id
+        WHERE md_barang.deleted_at IS NULL AND
         ${whereSQL} ORDER BY barang_id DESC`, params);
 
     return { rows, total };
@@ -116,6 +117,6 @@ export const updateBarang = async (id, data) => {
 };
 
 export const deleteBarang = async (id) => {
-    const [result] = await pool.query("DELETE FROM md_barang WHERE barang_id = ?", [id]);
+    const [result] = await pool.query("UPDATE md_barang SET deleted_at = NOW() WHERE barang_id = ?", [id]);
     return result.affectedRows > 0;
 };

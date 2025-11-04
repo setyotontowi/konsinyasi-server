@@ -45,9 +45,12 @@ export const addSatuan = async (req, res) => {
     if (!req.body.mst_nama)
       return sendResponse(res, {}, "mst_nama is required", 400);
 
+    console.log(req.body);
+
     const data = await createSatuan(req.body);
     sendResponse(res, data, "Satuan created successfully", 201);
   } catch (err) {
+    console.log(err);
     sendResponse(res, {}, "Failed to create satuan", 500);
   }
 };
