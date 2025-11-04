@@ -107,7 +107,7 @@ export const addItem = async (req, res) => {
     if (!req.body.barang_nama)
       return sendResponse(res, {}, "nama is required", 400);
 
-    if (!req.body.id_satuan_terkecil)
+    if (!req.body.id_satuan_kecil)
       return sendResponse(res, {}, "satuan is required", 400);
 
     const data = await createBarang(req.body);

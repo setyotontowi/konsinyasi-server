@@ -63,19 +63,22 @@ const offset = (page - 1) * limit;
     if (filters.nama) {
         whereClauses.push('barang_nama LIKE ?');
         params.push(`%${filters.nama}%`);
+
+        whereClauses.push('serial_number LIKE ?');
+        params.push(`%${filters.nama}%`);
     }
 
-    if (filters.serial_number) {
-        whereClauses.push('serial_number = ?');
-        params.push(`%${filters.serial_number}%`);
-    }
 
     const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' OR ') : '';
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_barang ${whereSQL}`, params);
     const total = countRows[0].total;
 
-    const [rows] = await pool.query(`SELECT * FROM md_barang ${whereSQL} ORDER BY barang_id DESC`, params);
+    const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan FROM 
+        md_barang
+        JOIN md_satuan ON md_barang.id_satuan_kecil = md_satuan.mst_id
+        ${whereSQL} ORDER BY barang_id DESC`, params);
+
     return { rows, total };
 };
 
@@ -87,7 +90,7 @@ export const getBarangById = async (id) => {
 export const createBarang = async (data) => {
     const [result] = await pool.query(
         "INSERT INTO md_barang (barang_nama, serial_number, id_satuan_kecil, barang_hpp, barang_id_simrs) VALUES (?, ?, ?, ?, ?)",
-        [data.barang_nama, data.serial_number, data.id_satuan_terkecil, data.barang_hpp, data.barang_id_simrs]
+        [data.barang_nama, data.serial_number, data.id_satuan_kecil, data.barang_hpp, data.barang_id_simrs]
     );
     return { mst_id: result.insertId, nama: data.barang_nama };
 };
