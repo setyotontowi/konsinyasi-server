@@ -53,3 +53,66 @@ export const deleteSatuan = async (id) => {
 
 
 // Barang
+export const getAllBarang = async ({ page = 1, limit = 20, filters = {} } = {}) => {
+const offset = (page - 1) * limit;
+
+    // build WHERE clauses dynamically
+    let whereClauses = [];
+    let params = [];
+
+    if (filters.nama) {
+        whereClauses.push('barang_nama LIKE ?');
+        params.push(`%${filters.nama}%`);
+    }
+
+    if (filters.serial_number) {
+        whereClauses.push('serial_number = ?');
+        params.push(`%${filters.serial_number}%`);
+    }
+
+    const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' OR ') : '';
+
+    const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_barang ${whereSQL}`, params);
+    const total = countRows[0].total;
+
+    const [rows] = await pool.query(`SELECT * FROM md_barang ${whereSQL} ORDER BY barang_id DESC`, params);
+    return { rows, total };
+};
+
+export const getBarangById = async (id) => {
+    const [rows] = await pool.query("SELECT * FROM md_barang WHERE barang_id = ?", [id]);
+    return rows[0];
+};
+
+export const createBarang = async (data) => {
+    const [result] = await pool.query(
+        "INSERT INTO md_barang (barang_nama, serial_number, id_satuan_kecil, barang_hpp, barang_id_simrs) VALUES (?, ?, ?, ?, ?)",
+        [data.barang_nama, data.serial_number, data.id_satuan_terkecil, data.barang_hpp, data.barang_id_simrs]
+    );
+    return { mst_id: result.insertId, nama: data.barang_nama };
+};
+
+export const updateBarang = async (id, data) => {
+    const fields = [];
+    const values = [];
+
+    for (const key in data) {
+        fields.push(`${key} = ?`);
+        values.push(data[key]);
+    }
+
+    if (fields.length === 0) return 0; // nothing to update
+
+    values.push(id); // for WHERE clause
+
+    const [result] = await pool.query(
+        `UPDATE md_barang SET ${fields.join(', ')} WHERE barang_id = ?`,
+        values
+    );
+    return result.affectedRows > 0;
+};
+
+export const deleteBarang = async (id) => {
+    const [result] = await pool.query("DELETE FROM md_barang WHERE barang_id = ?", [id]);
+    return result.affectedRows > 0;
+};
