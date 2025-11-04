@@ -1,4 +1,4 @@
-import { listAllUserGroups, changeUserGroup, getUserGroupPrivileges, setUserGroupPrivileges, } from "../models/userGroupModel.js";
+import { listAllUserGroups, changeUserGroup, getUserGroupPrivileges, setUserGroupPrivileges } from "../models/userGroupModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const getAllUserGroups = async (req, res) => {

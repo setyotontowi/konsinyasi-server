@@ -11,6 +11,7 @@ export const listAllUserGroups = async () => {
     LEFT JOIN 
         md_users u 
         ON u.id_users_group = g.id 
+    WHERE u.status_active = 'Ya'
     GROUP BY 
         g.id, g.group_nama
     ORDER BY 

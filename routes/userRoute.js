@@ -5,7 +5,12 @@ import {
     updateProfile, 
     deleteUser, 
  } from "../controllers/userController.js";
-import { getAllUserGroups, updateUserGroup, getUserGroupPrivilege, updateUserGroupPrivilege } from "../controllers/userGroupController.js";
+import { 
+    getAllUserGroups, 
+    updateUserGroup, 
+    getUserGroupPrivilege, 
+    updateUserGroupPrivilege
+} from "../controllers/userGroupController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();

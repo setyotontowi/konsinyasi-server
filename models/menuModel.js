@@ -75,3 +75,30 @@ export async function getAllRolesWithPrivileges() {
 
   return result;
 }
+
+export async function listAllMenus() {
+  const [rows] = await pool.query(`
+    SELECT m.id, m.nama, m.path, m.icon, m.id_parent
+    FROM md_menu m
+    WHERE m.is_active = 1
+    ORDER BY m.id_parent, m.order, m.id
+  `);
+
+  // --- Nesting logic ---
+  const map = {};
+  const roots = [];
+
+  rows.forEach(row => {
+    map[row.id] = { ...row, children: [] };
+  });
+
+  rows.forEach(row => {
+    if (row.id_parent) {
+      map[row.id_parent]?.children.push(map[row.id]);
+    } else {
+      roots.push(map[row.id]);
+    }
+  });
+
+  return roots;
+}
