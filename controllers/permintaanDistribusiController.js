@@ -15,7 +15,7 @@ export const getAllPermintaanDistribusi = async (req, res) => {
 
     // 🔒 Restrict by unit if not admin
     if (user.role !== 1) {
-      filters.id_master_unit = user.id_master_unit;
+      filters.id_master_unit = user.unit;
     }
 
     const result = await PermintaanModel.getAllPermintaanDistribusi({
@@ -64,11 +64,16 @@ export const createPermintaanDistribusi = async (req, res) => {
     const user = req.user; // from JWT
     const data = req.body;
 
+    if (user.role !== 1) {
+       data.id_master_unit = user.unit;
+    }
+
     const result = await PermintaanModel.createPermintaanDistribusi(data, user);
     return sendResponse(res, { pd_id: result.pd_id }, "Permintaan distribusi created successfully", 201);
   } catch (error) {
     console.error("Error creating permintaan:", error);
-    return sendResponse(res, {}, "Failed to create permintaan distribusi", 500);
+    if (req.user.unit == null) return sendResponse(res, {}, "User belum memiliki unit", 500)
+    else return sendResponse(res, {}, "Failed to create permintaan distribusi", 500);
   }
 };
 
