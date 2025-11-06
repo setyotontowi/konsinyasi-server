@@ -6,7 +6,7 @@ export const getAllSatuan = async ({ page = 1, limit = 20, filters = {} } = {}) 
 const offset = (page - 1) * limit;
 
     // build WHERE clauses dynamically
-    let whereClauses = [];
+    let whereClauses = ["deleted_at IS NULL"];
     let params = [];
 
     if (filters.nama) {
@@ -14,7 +14,7 @@ const offset = (page - 1) * limit;
         params.push(`%${filters.nama}%`);
     }``
 
-    const whereSQL = whereClauses.length ? 'WHERE deleted_at IS NULL AND ' + whereClauses.join(' AND ') : '';
+    const whereSQL = `WHERE ${whereClauses.join(" AND ")}`;
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_satuan un ${whereSQL}`, params);
     const total = countRows[0].total;
@@ -57,7 +57,7 @@ export const getAllBarang = async ({ page = 1, limit = 20, filters = {} } = {}) 
 const offset = (page - 1) * limit;
 
     // build WHERE clauses dynamically
-    let whereClauses = [];
+    let whereClauses = ["md_barang.deleted_at IS NULL"];
     let params = [];
 
     if (filters.nama) {
@@ -68,8 +68,7 @@ const offset = (page - 1) * limit;
         params.push(`%${filters.nama}%`);
     }
 
-
-    const whereSQL = whereClauses.length ? whereClauses.join(' OR ') : '';
+    const whereSQL = `WHERE ${whereClauses.join(" AND ")}`; 
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_barang ${whereSQL}`, params);
     const total = countRows[0].total;
@@ -77,7 +76,6 @@ const offset = (page - 1) * limit;
     const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan FROM 
         md_barang
         JOIN md_satuan ON md_barang.id_satuan_kecil = md_satuan.mst_id
-        WHERE md_barang.deleted_at IS NULL AND
         ${whereSQL} ORDER BY barang_id DESC`, params);
 
     return { rows, total };

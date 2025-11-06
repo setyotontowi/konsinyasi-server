@@ -7,7 +7,7 @@ import pool from "../config/db.js";
 export const getAllDistribusi = async (filters = {}) => {
   const { id_master_unit, id_permintaan_distribusi, start_date, end_date } = filters;
 
-  let whereClauses = [];
+  let whereClauses = ["deleted_at IS NULL"];
   let values = [];
 
   if (id_master_unit) {
@@ -31,7 +31,7 @@ export const getAllDistribusi = async (filters = {}) => {
     values.push(end_date);
   }
 
-  const whereQuery = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  const whereQuery = `WHERE ${whereClauses.join(" AND ")}`;
 
   const [rows] = await pool.query(
     `SELECT * FROM ts_distribusi ${whereQuery} ORDER BY id DESC`,
