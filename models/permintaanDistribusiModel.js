@@ -128,13 +128,38 @@ export const getPermintaanDistribusiById = async (id) => {
 // Update header permintaan distribusi
 // --------------------------
 export const updatePermintaanDistribusi = async (data) => {
-  const { pd_id, id_master_unit_tujuan, nomor_rm, nama_pasien, diagnosa } = data;
+  const { pd_id, ...fieldsToUpdate } = data;
+
+  const fields = [];
+  const values = [];
+
+  // Optional whitelist for safety
+  const allowedFields = [
+    "id_master_unit_tujuan",
+    "nomor_rm",
+    "nama_pasien",
+    "diagnosa"
+  ];
+
+  for (const key in fieldsToUpdate) {
+    if (allowedFields.includes(key)) {
+      fields.push(`${key} = ?`);
+      values.push(fieldsToUpdate[key]);
+    }
+  }
+
+  if (fields.length === 0) return false; // nothing to update
+
+  // Always update timestamp
+  fields.push("updated_at = NOW()");
+
+  values.push(pd_id);
 
   const [result] = await pool.query(
-    `UPDATE ls_permintaan_distribusi
-     SET id_master_unit_tujuan = ?, nomor_rm = ?, nama_pasien = ?, diagnosa = ?, updated_at = NOW()
+    `UPDATE ls_permintaan_distribusi 
+     SET ${fields.join(", ")} 
      WHERE pd_id = ? AND deleted_at IS NULL`,
-    [id_master_unit_tujuan, nomor_rm, nama_pasien, diagnosa, pd_id]
+    values
   );
 
   return result.affectedRows > 0;
@@ -171,15 +196,38 @@ export const deletePermintaanDistribusi = async (pd_id) => {
 // Edit detail item (e.g., qty_real or qty)
 // --------------------------
 export const editPermintaanDistribusiDetail = async (data) => {
-  const { pdd_id, qty, qty_real } = data;
+  const { pdd_id, ...fieldsToUpdate } = data;
+
+  const fields = [];
+  const values = [];
+
+  // Optional whitelist for safety
+  const allowedFields = ["id_master_satuan", "qty", "qty_real"];
+
+  for (const key in fieldsToUpdate) {
+    if (allowedFields.includes(key)) {
+      fields.push(`${key} = ?`);
+      values.push(fieldsToUpdate[key]);
+    }
+  }
+
+  if (fields.length === 0) return false; // nothing to update
+
+  // Always update timestamp
+  fields.push("updated_at = NOW()");
+
+  values.push(pdd_id);
+
   const [result] = await pool.query(
-    `UPDATE dt_permintaan_distribusi_detail
-     SET qty = ?, qty_real = ?, updated_at = NOW()
+    `UPDATE dt_permintaan_distribusi_detail 
+     SET ${fields.join(", ")} 
      WHERE pdd_id = ? AND deleted_at IS NULL`,
-    [qty, qty_real, pdd_id]
+    values
   );
+
   return result.affectedRows > 0;
 };
+
 
 // --------------------------
 // Soft delete detail item
