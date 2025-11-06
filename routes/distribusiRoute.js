@@ -1,5 +1,6 @@
 import express from "express";
 import * as Controller from "../controllers/permintaanDistribusiController.js";
+import * as DistribusiController from "../controllers/distribusiController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -29,5 +30,21 @@ router.put("/permintaan/detail/:id", verifyToken, Controller.editPermintaanDistr
 
 // ✅ Soft delete one detail item
 router.delete("/permintaan/detail/:id", verifyToken, Controller.deletePermintaanDistribusiDetail);
+
+
+// GET all distribusi (with filters & pagination)
+router.get("/distribusi", verifyToken, DistribusiController.getAllDistribusi);
+
+// GET single distribusi by ID
+router.get("/distribusi/:id", verifyToken, DistribusiController.getDistribusiById);
+
+// POST create new distribusi
+router.post("/distribusi", verifyToken, DistribusiController.createDistribusi);
+
+// PUT update distribusi (only waktu_kirim)
+router.put("/distribusi/:id", verifyToken, DistribusiController.updateDistribusi);
+
+// DELETE soft delete distribusi
+router.delete("/distribusi/:id", verifyToken, DistribusiController.deleteDistribusi);
 
 export default router;
