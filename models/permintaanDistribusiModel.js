@@ -12,7 +12,7 @@ export const createPermintaanDistribusi = async (data, user) => {
 
     // Insert header record
     const [headerResult] = await conn.query(
-      `INSERT INTO ls_permintaan_distribusi 
+      `INSERT INTO hd_permintaan_distribusi 
        (id_master_unit, id_master_unit_tujuan, id_users, nomor_rm, nama_pasien, diagnosa, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [id_master_unit, id_master_unit_tujuan, user.id, nomor_rm, nama_pasien, diagnosa]
@@ -90,12 +90,12 @@ export const getAllPermintaanDistribusi = async ({
   }
 
   const [rows] = await pool.query(
-    `SELECT * FROM ls_permintaan_distribusi ${where} ORDER BY waktu DESC LIMIT ? OFFSET ?`,
+    `SELECT * FROM hd_permintaan_distribusi ${where} ORDER BY waktu DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
 
   const [[{ total }]] = await pool.query(
-    `SELECT COUNT(*) AS total FROM ls_permintaan_distribusi ${where}`,
+    `SELECT COUNT(*) AS total FROM hd_permintaan_distribusi ${where}`,
     params
   );
 
@@ -110,7 +110,7 @@ export const getAllPermintaanDistribusi = async ({
 // --------------------------
 export const getPermintaanDistribusiById = async (id) => {
   const [[header]] = await pool.query(
-    `SELECT * FROM ls_permintaan_distribusi WHERE pd_id = ? AND deleted_at IS NULL`,
+    `SELECT * FROM hd_permintaan_distribusi WHERE pd_id = ? AND deleted_at IS NULL`,
     [id]
   );
 
@@ -156,7 +156,7 @@ export const updatePermintaanDistribusi = async (data) => {
   values.push(pd_id);
 
   const [result] = await pool.query(
-    `UPDATE ls_permintaan_distribusi 
+    `UPDATE hd_permintaan_distribusi 
      SET ${fields.join(", ")} 
      WHERE pd_id = ? AND deleted_at IS NULL`,
     values
@@ -174,7 +174,7 @@ export const deletePermintaanDistribusi = async (pd_id) => {
     await conn.beginTransaction();
 
     await conn.query(
-      `UPDATE ls_permintaan_distribusi SET deleted_at = NOW() WHERE pd_id = ?`,
+      `UPDATE hd_permintaan_distribusi SET deleted_at = NOW() WHERE pd_id = ?`,
       [pd_id]
     );
     await conn.query(

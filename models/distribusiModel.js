@@ -34,7 +34,7 @@ export const getAllDistribusi = async (filters = {}) => {
   const whereQuery = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
   const [rows] = await pool.query(
-    `SELECT * FROM ls_distribusi ${whereQuery} ORDER BY id DESC`,
+    `SELECT * FROM ts_distribusi ${whereQuery} ORDER BY id DESC`,
     values
   );
 
@@ -45,7 +45,7 @@ export const getAllDistribusi = async (filters = {}) => {
  * Get distribusi by ID
  */
 export const getDistribusiById = async (id) => {
-  const [rows] = await pool.query(`SELECT * FROM ls_distribusi WHERE id = ?`, [id]);
+  const [rows] = await pool.query(`SELECT * FROM ts_distribusi WHERE id = ?`, [id]);
   return rows[0] || null;
 };
 
@@ -56,7 +56,7 @@ export const createDistribusi = async (data) => {
   const { id_permintaan_distribusi, id_master_unit, id_users} = data;
 
   const [result] = await pool.query(
-    `INSERT INTO ls_distribusi (id_permintaan_distribusi, id_master_unit, id_users)
+    `INSERT INTO ts_distribusi (id_permintaan_distribusi, id_master_unit, id_users)
      VALUES (?, ?, ?)`,
     [id_permintaan_distribusi, id_master_unit, id_users]
   );
@@ -68,7 +68,7 @@ export const createDistribusi = async (data) => {
  * Update distribusi (only waktu_kirim is editable)
  */
 export const updateDistribusi = async (id, waktu_kirim) => {
-  await pool.query(`UPDATE ls_distribusi SET waktu_kirim = ? WHERE id = ?`, [waktu_kirim, id]);
+  await pool.query(`UPDATE ts_distribusi SET waktu_kirim = ? WHERE id = ?`, [waktu_kirim, id]);
   return await getDistribusiById(id);
 };
 
@@ -77,7 +77,7 @@ export const updateDistribusi = async (id, waktu_kirim) => {
  */
 export const deleteDistribusi = async (id) => {
   const [result] = await pool.query(
-    `UPDATE ls_distribusi SET deleted_at = NOW() WHERE id = ?`,
+    `UPDATE ts_distribusi SET deleted_at = NOW() WHERE id = ?`,
     [id]
   );
   return result.affectedRows > 0;
