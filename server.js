@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoute.js";
 import unitRoutes from "./routes/unitRoute.js"
 import barangRoutes from "./routes/barangRoute.js"
 import menuRoutes from "./routes/menuRoute.js"
+import distribusiRoutes from "./routes/distribusiRoute.js"
 
 const envFile = process.env.NODE_ENV === 'development' ? '.env.dev' : '.env';
 dotenv.config({ path: envFile, override: true });
@@ -27,6 +28,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/unit", unitRoutes);
 app.use("/api/barang", barangRoutes);
 app.use("/api/menu", menuRoutes);
+app.use("/api/distribusi", distribusiRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`✅ Server running on port ${process.env.PORT}`);
