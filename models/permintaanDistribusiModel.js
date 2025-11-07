@@ -79,25 +79,22 @@ export const getAllPermintaanDistribusi = async ({
     params.push(filters.id_master_unit_tujuan);
   }
 
-  if (filters.nomor_rm) {
-    where += " AND hd.nomor_rm LIKE ?";
-    params.push(`%${filters.nomor_rm}%`);
-  }
-
-  if (filters.nama_pasien) {
-    where += " AND hd.nama_pasien LIKE ?";
-    params.push(`%${filters.nama_pasien}%`);
+  if (filters.search) {
+    where += " AND (hd.nama_pasien LIKE ? OR hd.nomor_rm LIKE ?)";
+    params.push(`%${filters.search}%`, `%${filters.search}%`);
   }
 
   const [rows] = await pool.query(
-    `SELECT hd.*, ut.nama as unit_tujuan FROM hd_permintaan_distribusi hd ${where} 
-    JOIN md_unit ut ON (hd.id_master_unit_tujuan ON ut.id)
+    `SELECT hd.*, ua.nama as unit_asal, ut.nama as unit_tujuan FROM hd_permintaan_distribusi hd 
+    JOIN md_unit ut ON (hd.id_master_unit_tujuan = ut.id)
+    JOIN md_unit ua ON (hd.id_master_unit = ua.id)
+    ${where} 
     ORDER BY waktu DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
 
   const [[{ total }]] = await pool.query(
-    `SELECT COUNT(*) AS total FROM hd_permintaan_distribusi ${where}`,
+    `SELECT COUNT(*) AS total FROM hd_permintaan_distribusi hd ${where}`,
     params
   );
 
