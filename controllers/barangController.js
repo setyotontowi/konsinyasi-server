@@ -116,8 +116,11 @@ export const addItem = async (req, res) => {
     const data = await createBarang(req.body);
     sendResponse(res, data, " Barang created successfully", 201);
   } catch (err) {
-    console.log(err);
-    sendResponse(res, {}, "Failed to create barang", 500);
+    let message = "Gagal menambahkan barang "
+    if (err.code === 'ER_DUP_ENTRY') {
+      message += ": Serial Number atau ID Barang SIMRS tidak boleh sama"
+    }
+    sendResponse(res, err, message, 500);
   }
 };
 

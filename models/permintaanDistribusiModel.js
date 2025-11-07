@@ -59,38 +59,40 @@ export const getAllPermintaanDistribusi = async ({
 } = {}) => {
   const offset = (page - 1) * limit;
 
-  let where = "WHERE deleted_at IS NULL";
+  let where = "WHERE hd.deleted_at IS NULL";
   const params = [];
 
   // 🔹 Restrict non-admin users
   if (user.role !== 1 && user.id_master_unit) {
-    where += " AND id_master_unit = ?";
+    where += " AND hd.id_master_unit = ?";
     params.push(user.id_master_unit);
   }
 
   // 🔹 Additional filters
   if (filters.start && filters.end) {
-    where += " AND waktu BETWEEN ? AND ?";
+    where += " AND hd.waktu BETWEEN ? AND ?";
     params.push(filters.start, filters.end);
   }
 
   if (filters.id_master_unit_tujuan) {
-    where += " AND id_master_unit_tujuan = ?";
+    where += " AND hd.id_master_unit_tujuan = ?";
     params.push(filters.id_master_unit_tujuan);
   }
 
   if (filters.nomor_rm) {
-    where += " AND nomor_rm LIKE ?";
+    where += " AND hd.nomor_rm LIKE ?";
     params.push(`%${filters.nomor_rm}%`);
   }
 
   if (filters.nama_pasien) {
-    where += " AND nama_pasien LIKE ?";
+    where += " AND hd.nama_pasien LIKE ?";
     params.push(`%${filters.nama_pasien}%`);
   }
 
   const [rows] = await pool.query(
-    `SELECT * FROM hd_permintaan_distribusi ${where} ORDER BY waktu DESC LIMIT ? OFFSET ?`,
+    `SELECT hd.*, ut.nama as unit_tujuan FROM hd_permintaan_distribusi hd ${where} 
+    JOIN md_unit ut ON (hd.id_master_unit_tujuan ON ut.id)
+    ORDER BY waktu DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
 

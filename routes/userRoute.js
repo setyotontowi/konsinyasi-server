@@ -9,7 +9,8 @@ import {
     getAllUserGroups, 
     updateUserGroup, 
     getUserGroupPrivilege, 
-    updateUserGroupPrivilege
+    updateUserGroupPrivilege,
+    createUserGroup
 } from "../controllers/userGroupController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
@@ -18,6 +19,7 @@ const router = express.Router();
 router.get("/", verifyToken, getAllUsers);
 router.get("/profile", verifyToken, getProfile);
 router.get("/group", verifyToken, getAllUserGroups);
+router.post("/group", verifyToken, createUserGroup);
 
 router.put('/change-group', verifyToken, updateUserGroup);
 router.put("/profile", verifyToken, updateProfile);

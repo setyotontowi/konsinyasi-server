@@ -10,8 +10,8 @@ export const listAllUserGroups = async () => {
         md_users_group g
     LEFT JOIN 
         md_users u 
-        ON u.id_users_group = g.id 
-    WHERE u.status_active = 'Ya'
+        ON u.id_users_group = g.id
+        AND u.status_active = 'Ya' 
     GROUP BY 
         g.id, g.group_nama
     ORDER BY 
@@ -67,4 +67,14 @@ export const setUserGroupPrivileges = async (groupId, menuIds) => {
   } finally {
     conn.release();
   }
+};
+
+// Add User Group
+export const insertUserGroup = async (group_nama) => {
+  const [result] = await pool.query(
+    `INSERT INTO md_users_group (group_nama)
+     VALUES (?)`,
+    [group_nama.group_nama]
+  );
+  return result.insertId;
 };

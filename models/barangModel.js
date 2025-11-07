@@ -73,9 +73,10 @@ const offset = (page - 1) * limit;
     const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_barang ${whereSQL}`, params);
     const total = countRows[0].total;
 
-    const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan FROM 
+    const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan, md_unit.nama as nama_pabrik FROM 
         md_barang
         JOIN md_satuan ON md_barang.id_satuan_kecil = md_satuan.mst_id
+        JOIN md_unit ON md_barang.id_pabrik = md_unit.id
         ${whereSQL} ORDER BY barang_id DESC`, params);
 
     return { rows, total };
@@ -88,10 +89,10 @@ export const getBarangById = async (id) => {
 
 export const createBarang = async (data) => {
     const [result] = await pool.query(
-        "INSERT INTO md_barang (barang_nama, serial_number, id_satuan_kecil, barang_hpp, barang_id_simrs) VALUES (?, ?, ?, ?, ?)",
-        [data.barang_nama, data.serial_number, data.id_satuan_kecil, data.barang_hpp, data.barang_id_simrs]
+        "INSERT INTO md_barang (barang_nama, serial_number, id_pabrik, id_satuan_kecil, barang_hpp, barang_id_simrs) VALUES (?, ?, ?, ?, ?, ?)",
+        [data.barang_nama, data.serial_number, data.id_pabrik, data.id_satuan_kecil, data.barang_hpp, data.barang_id_simrs]
     );
-    return { mst_id: result.insertId, nama: data.barang_nama };
+    return { mst_id: result.insertId, nama: data.barang_nama, result:result };
 };
 
 export const updateBarang = async (id, data) => {

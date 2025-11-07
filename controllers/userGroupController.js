@@ -1,4 +1,4 @@
-import { listAllUserGroups, changeUserGroup, getUserGroupPrivileges, setUserGroupPrivileges } from "../models/userGroupModel.js";
+import { listAllUserGroups, changeUserGroup, getUserGroupPrivileges, setUserGroupPrivileges, insertUserGroup } from "../models/userGroupModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const getAllUserGroups = async (req, res) => {
@@ -59,5 +59,21 @@ export const updateUserGroupPrivilege = async (req, res) => {
   } catch (err) {
     console.error(err);
     sendResponse(res, {}, "Failed to update privileges", 500);
+  }
+};
+
+export const createUserGroup = async (req, res) => {
+  const { group_nama } = req.body;
+
+  try {
+    // insert into database
+    const unitId = await insertUserGroup({
+      group_nama
+    });
+
+    sendResponse(res, unitId, 'Unit created successfully');    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
