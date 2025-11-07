@@ -61,11 +61,8 @@ const offset = (page - 1) * limit;
     let params = [];
 
     if (filters.nama) {
-        whereClauses.push('barang_nama LIKE ?');
-        params.push(`%${filters.nama}%`);
-
-        whereClauses.push('serial_number LIKE ?');
-        params.push(`%${filters.nama}%`);
+    whereClauses.push('(barang_nama LIKE ? OR serial_number LIKE ?)');
+    params.push(`%${filters.nama}%`, `%${filters.nama}%`);
     }
 
     const whereSQL = `WHERE ${whereClauses.join(" AND ")}`; 
