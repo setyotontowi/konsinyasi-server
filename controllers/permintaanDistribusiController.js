@@ -7,11 +7,12 @@ import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.j
  */
 export const getAllPermintaanDistribusi = async (req, res) => {
   try {
-    const { page = 1, limit = 20, start, end, id_master_unit, id_master_unit_tujuan, search } = req.query;
+    const { page = 1, limit = 20, start, end, id_master_unit, id_master_unit_tujuan, search, permintaan } = req.query;
     const user = req.user; // from JWT middleware
 
     // Build filters
-    const filters = { start, end, id_master_unit, id_master_unit_tujuan, search };
+    const permintaanDistribusi = permintaan === 'true'? 1 : 0
+    const filters = { start, end, id_master_unit, id_master_unit_tujuan, search, permintaanDistribusi };
 
     // 🔒 Restrict by unit if not admin
     if (user.role !== 1) {

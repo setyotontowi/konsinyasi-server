@@ -11,30 +11,35 @@ export const getAllDistribusi = async (filters = {}) => {
   let values = [];
 
   if (id_master_unit) {
-    whereClauses.push("id_master_unit = ?");
+    whereClauses.push("d.id_master_unit = ?");
     values.push(id_master_unit);
   }
 
   if (id_permintaan_distribusi) {
-    whereClauses.push("id_permintaan_distribusi = ?");
+    whereClauses.push("d.id_permintaan_distribusi = ?");
     values.push(id_permintaan_distribusi);
   }
 
   if (start_date && end_date) {
-    whereClauses.push("DATE(waktu_kirim) BETWEEN ? AND ?");
+    whereClauses.push("DATE(d.waktu_kirim) BETWEEN ? AND ?");
     values.push(start_date, end_date);
   } else if (start_date) {
-    whereClauses.push("DATE(waktu_kirim) >= ?");
+    whereClauses.push("DATE(d.waktu_kirim) >= ?");
     values.push(start_date);
   } else if (end_date) {
-    whereClauses.push("DATE(waktu_kirim) <= ?");
+    whereClauses.push("DATE(d.waktu_kirim) <= ?");
     values.push(end_date);
   }
 
   const whereQuery = `WHERE ${whereClauses.join(" AND ")}`;
 
   const [rows] = await pool.query(
-    `SELECT * FROM ts_distribusi ${whereQuery} ORDER BY id DESC`,
+    `SELECT d.*, un.nama as nama_unit, u.nama as nama_user
+    FROM ts_distribusi d
+    JOIN md_unit un ON (d.id_master_unit = un.id)
+    JOIN md_users u ON (d.id_users = u.id)
+    ${whereQuery} 
+    ORDER BY id DESC`,
     values
   );
 
