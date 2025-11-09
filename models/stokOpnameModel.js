@@ -13,16 +13,17 @@ export const insertRecord = async (conn, data) => {
     stok_sebelum = 0,
     stok_sesudah = 0,
     keterangan = "",
+    id_stok_opname_detail,
     id_users
   } = data;
 
   await conn.query(
     `
     INSERT INTO ts_history_stok 
-      (transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_users, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      (transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `,
-    [transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_users]
+    [transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users]
   );
 };
 
@@ -51,7 +52,7 @@ export const createStokOpname = async (data, id_users) => {
         throw new Error(`Missing required field: id_users`);
     });
 
-    const bulan = new Date(waktu_input).getMonth() + 1;
+    const bulan = waktu_input.split(' ')[0];
 
     // Part 1: Insert header record
     const [headerResult] = await conn.query(
@@ -141,11 +142,12 @@ export const createStokOpname = async (data, id_users) => {
         ed: item.ed,
         transaksi: 'Stok Opname',
         nobatch: item.nobatch,
-        stok_sebelum: stok.sisa,
+        stok_sebelum: item.sisa,
         masuk: 0,
         keluar: 0,
         stok_sesudah: item.sisa,
         keterangan: `Stok opname detail #${insertedId}`,
+        id_stok_opname_detail: insertedId,
         id_users
       };
       await insertRecord(conn, actualData);
