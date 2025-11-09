@@ -1,5 +1,6 @@
 // controllers/stokOpnameController.js
-import { createStokOpname } from "../models/stokOpnameModel.js";
+import { createStokOpname, getAllStokOpname } from "../models/stokOpnameModel.js";
+import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const createStokOpnameController = async (req, res) => {
   try {
@@ -26,6 +27,36 @@ export const createStokOpnameController = async (req, res) => {
     return res.status(500).json({
       status: 500,
       message: err.message || "Terjadi kesalahan saat menyimpan stok opname",
+    });
+  }
+};
+
+export const getStokOpname = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const filters = {
+      start: req.query.start,
+      end: req.query.end,
+    };
+
+    const user = req.user || {}; // assuming middleware sets this
+
+    const { data, pagination } = await getAllStokOpname({
+      page,
+      limit,
+      filters,
+      user,
+    });
+
+    return sendPaginatedResponse(res, data, pagination.page, pagination.limit, pagination.total);
+  } catch (error) {
+    console.error("Error fetching stok opname:", error);
+    res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };

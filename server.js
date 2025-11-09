@@ -30,7 +30,7 @@ app.use("/api/unit", unitRoutes);
 app.use("/api/barang", barangRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/distribusi", distribusiRoutes);
-app.use("/api/stok-opname", stokOpnameRoutes);
+app.use("/api/inventory", stokOpnameRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`✅ Server running on port ${process.env.PORT}`);

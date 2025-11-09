@@ -162,3 +162,53 @@ export const createStokOpname = async (data, id_users) => {
     conn.release();
   }
 };
+
+
+export const getAllStokOpname = async ({ 
+  page = 1, 
+  limit = 20, 
+  filters = {}, 
+  user = {} 
+} = {}) => {
+  const offset = (page - 1) * limit;
+
+  let where = "WHERE hd.deleted_at IS NULL";
+  const params = [];
+
+  // 🔹 Restrict non-admin users
+  if (user.role !== 1 && user.id_master_unit) {
+    where += " AND hd.id_master_unit = ?";
+    params.push(user.id_master_unit);
+  }
+
+  // 🔹 Additional filters
+  if (filters.start && filters.end) {
+    where += " AND hd.waktu_input BETWEEN ? AND ?";
+    params.push(filters.start, filters.end);
+  }
+  
+  const [rows] = await pool.query(
+    `SELECT hd.*, ua.nama as nama_unit, us.nama as nama_user, COUNT(sod.id) as jumlah_barang
+    FROM hd_stok_opname hd 
+    JOIN md_unit ua ON (hd.id_master_unit = ua.id)
+    JOIN md_users us ON (hd.id_users = us.id)
+    JOIN dt_stok_opname_detail sod ON (sod.id_stok_opname = hd.id)
+    ${where} 
+    GROUP BY hd.id
+    ORDER BY waktu_input DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+
+  const [[{ total }]] = await pool.query(
+    `SELECT COUNT(*) AS total 
+    FROM hd_stok_opname hd
+     ${where}`,
+    params
+  );
+
+  return {
+    data: rows,
+    pagination: { total, page, limit, total_pages: Math.ceil(total / limit) },
+  };
+};
+
