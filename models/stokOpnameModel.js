@@ -212,3 +212,44 @@ export const getAllStokOpname = async ({
   };
 };
 
+
+export const getStokOpnameById = async (id) => {
+  // --- Header ---
+  const [headerRows] = await pool.query(
+    `
+    SELECT hd.*, ua.nama AS nama_unit, us.nama AS nama_user
+    FROM hd_stok_opname hd
+    JOIN md_unit ua ON hd.id_master_unit = ua.id
+    JOIN md_users us ON hd.id_users = us.id
+    WHERE hd.id = ? AND hd.deleted_at IS NULL
+    `,
+    [id]
+  );
+
+  if (headerRows.length === 0) {
+    throw new Error("Stok opname tidak ditemukan");
+  }
+
+  const header = headerRows[0];
+
+  // --- Detail ---
+  const [details] = await pool.query(
+    `
+    SELECT 
+      d.*,
+      mb.barang_nama as nama_barang
+    FROM dt_stok_opname_detail d
+    JOIN md_barang mb ON d.id_master_barang = mb.barang_id
+    WHERE d.id_stok_opname = ? AND d.deleted_at IS NULL
+    ORDER BY barang_nama ASC
+    `,
+    [id]
+  );
+
+  // ✅ Combine details inside data
+  return {
+    ...header,
+    details,
+  };
+};
+

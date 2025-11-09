@@ -1,5 +1,5 @@
 // controllers/stokOpnameController.js
-import { createStokOpname, getAllStokOpname } from "../models/stokOpnameModel.js";
+import { createStokOpname, getAllStokOpname, getStokOpnameById } from "../models/stokOpnameModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const createStokOpnameController = async (req, res) => {
@@ -57,6 +57,30 @@ export const getStokOpname = async (req, res) => {
       status: 500,
       message: "Internal Server Error",
       error: error.message,
+    });
+  }
+};
+
+
+export const fetchStokOpnameById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        message: "ID stok opname wajib diisi",
+      });
+    }
+
+    const data = await getStokOpnameById(id);
+
+    return sendResponse(res, data);
+  } catch (error) {
+    console.error("Error fetching stok opname by ID:", error);
+    res.status(500).json({
+      status: 500,
+      message: error.message || "Internal Server Error",
     });
   }
 };
