@@ -84,3 +84,56 @@ export const fetchStokOpnameById = async (req, res) => {
     });
   }
 };
+
+import {
+  getDistinctEDsByBarang,
+  getDistinctNoBatchByBarangAndEd
+} from "../models/stokOpnameModel.js";
+
+// ✅ GET /inventory/barang/:id/eds
+export const getEDListByBarang = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "ID barang wajib diisi" });
+    }
+
+    const rows = await getDistinctEDsByBarang(id);
+
+    return sendResponse(res, rows);
+  } catch (err) {
+    console.error("getEDListByBarang error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal mengambil daftar ED",
+      error: err.message
+    });
+  }
+};
+
+
+// ✅ GET /inventory/barang/:id/nobatch?ed=YYYY-MM-DD
+export const getNoBatchListByBarangAndEd = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ed } = req.query;
+
+    if (!id || !ed) {
+      return res.status(400).json({
+        message: "Parameter 'id' dan 'ed' wajib diisi"
+      });
+    }
+
+    const rows = await getDistinctNoBatchByBarangAndEd(id, ed);
+
+    return sendResponse(res, rows);
+  } catch (err) {
+    console.error("getNoBatchListByBarangAndEd error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal mengambil daftar No Batch",
+      error: err.message
+    });
+  }
+};

@@ -268,3 +268,37 @@ export const getStokOpnameById = async (id) => {
   };
 };
 
+// ✅ Get distinct ED list for a specific barang
+export const getDistinctEDsByBarang = async (id_barang) => {
+  const [rows] = await pool.query(
+    `
+    SELECT DISTINCT ed
+    FROM ts_history_stok
+    WHERE id_barang = ?
+      AND ed IS NOT NULL
+    ORDER BY ed ASC
+    `,
+    [id_barang]
+  );
+
+  return rows;
+};
+
+
+// ✅ Get distinct NoBatch list for a specific barang + ED
+export const getDistinctNoBatchByBarangAndEd = async (id_barang, ed) => {
+  const [rows] = await pool.query(
+    `
+    SELECT DISTINCT nobatch
+    FROM ts_history_stok
+    WHERE id_barang = ? 
+      AND ed = DATE(?)
+      AND nobatch IS NOT NULL
+    ORDER BY nobatch ASC
+    `,
+    [id_barang, ed]
+  );
+
+  return rows;
+};
+
