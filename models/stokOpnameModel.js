@@ -237,16 +237,31 @@ export const getStokOpnameById = async (id) => {
     `
     SELECT 
       d.*,
-      mb.barang_nama as nama_barang
+      d.sisa AS kenyataan,
+      mb.barang_nama AS nama_barang,
+      -- editable = false if any later transaction exists in ts_history_stok
+      (
+        SELECT 
+          CASE 
+            WHEN COUNT(*) > 0 THEN FALSE
+            ELSE TRUE
+          END
+        FROM ts_history_stok hs
+        WHERE hs.id_barang = d.id_master_barang
+        AND hs.ed = d.ed
+        AND hs.nobatch = hs.nobatch
+        AND hs.created_at > hd.created_at
+        AND hs.transaksi != "Stok Opname"
+      ) AS editable
     FROM dt_stok_opname_detail d
     JOIN md_barang mb ON d.id_master_barang = mb.barang_id
+    JOIN hd_stok_opname hd ON d.id_stok_opname = hd.id
     WHERE d.id_stok_opname = ? AND d.deleted_at IS NULL
-    ORDER BY barang_nama ASC
+    ORDER BY mb.barang_nama ASC
     `,
     [id]
   );
 
-  // ✅ Combine details inside data
   return {
     ...header,
     details,
