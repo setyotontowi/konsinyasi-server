@@ -1,6 +1,13 @@
 // routes/stokOpnameRoutes.js
 import express from "express";
-import { createStokOpnameController, getStokOpname, fetchStokOpnameById, getEDListByBarang, getNoBatchListByBarangAndEd } from "../controllers/stokOpnameController.js";
+import { 
+    createStokOpnameController, 
+    getStokOpname, 
+    fetchStokOpnameById, 
+    getEDListByBarang, 
+    getNoBatchListByBarangAndEd,
+    checkStock
+} from "../controllers/stokOpnameController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -11,5 +18,6 @@ router.get("/stok-opname", verifyToken, getStokOpname);
 router.get("/stok-opname/:id", verifyToken, fetchStokOpnameById);
 router.get("/barang/:id/eds", getEDListByBarang);
 router.get("/barang/:id/nobatch", getNoBatchListByBarangAndEd);
+router.post("/check-stock", checkStock);
 
 export default router;

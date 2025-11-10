@@ -137,3 +137,40 @@ export const getNoBatchListByBarangAndEd = async (req, res) => {
     });
   }
 };
+
+import { calculateStok } from "../models/stokModel.js";
+
+// ✅ POST /inventory/check-stock
+export const checkStock = async (req, res) => {
+  try {
+    const { barang, nobatch, ed } = req.body;
+
+    if (!barang || !nobatch || !ed) {
+      return res.status(400).json({
+        success: false,
+        message: "barang, nobatch, dan ed wajib diisi",
+      });
+    }
+
+    const stockData = await calculateStok({
+      id_barang: barang,
+      nobatch,
+      ed,
+    });
+
+    // Fallback: ensure consistent structure
+    const sisa = stockData?.sisa ?? 0;
+
+    return res.status(200).json({
+      success: true,
+      data: { sisa },
+    });
+  } catch (err) {
+    console.error("checkStock error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal memeriksa stok",
+      error: err.message,
+    });
+  }
+};
