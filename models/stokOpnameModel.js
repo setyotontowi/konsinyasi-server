@@ -32,22 +32,22 @@ export const createStokOpname = async (data, id_users) => {
   try {
     await conn.beginTransaction();
 
-    const { waktu_input, id_master_unit, items } = data;
+    const { waktu_input, id_master_unit, details } = data;
 
     // Validation
-    if (!Array.isArray(items) || items.length === 0) {
+    if (!Array.isArray(details) || details.length === 0) {
       throw new Error("Item harus diisi");
     }
 
-    items.forEach((item, index) => {
+    details.forEach((item, index) => {
       if (!item.id_master_barang)
         throw new Error(`Missing required field: id_master_barang (item #${index + 1})`);
       if (!item.nobatch)
         throw new Error(`Missing required field: nobatch (item #${index + 1})`);
       if (!item.ed)
         throw new Error(`Missing required field: ed (item #${index + 1})`);
-      if (item.sisa == null)
-        throw new Error(`Missing required field: sisa (item #${index + 1})`);
+      if (item.kenyataan == null)
+        throw new Error(`Missing required field: kenyataan (item #${index + 1})`);
       if (!id_users)
         throw new Error(`Missing required field: id_users`);
     });
@@ -64,7 +64,67 @@ export const createStokOpname = async (data, id_users) => {
     const so_id = headerResult.insertId;
 
     // Part 2: Loop through each item sequentially
-    for (const item of items) {
+    for (const item of details) {
+      // Calculate stok before opname
+      const stok = await calculateStok({
+        id_barang: item.id_master_barang,
+        ed: item.ed,
+        nobatch: item.nobatch
+      });
+
+      const selisih = stok.sisa - item.kenyataan;
+      let masuk = 0
+      let keluar = 0
+
+      // 1️⃣ If selisih exists, insert penyeimbang
+      if (stok.baru) {
+        const penyeimbang = {
+          id_barang: item.id_master_barang,
+          ed: item.ed,
+          nobatch: item.nobatch,
+          transaksi: 'Stok Opname',
+          stok_sebelum: 0,
+          masuk: item.kenyataan,
+          keluar: 0,
+          stok_sesudah: item.kenyataan,
+          keterangan: "Stok Awal Sistem",
+          id_users
+        };
+        await insertRecord(conn, penyeimbang);  
+      } else if (selisih > 0) {
+        // stok lebih besar → perlu keluar
+        keluar = selisih;
+        const penyeimbang = {
+          id_barang: item.id_master_barang,
+          ed: item.ed,
+          nobatch: item.nobatch,
+          transaksi: 'Stok Opname',
+          stok_sebelum: stok.sisa,
+          masuk: 0,
+          keluar: selisih,
+          stok_sesudah: item.kenyataan,
+          keterangan: "Penyeimbang stok (selisih positif)",
+          id_users
+        };
+        await insertRecord(conn, penyeimbang);
+      } else if (selisih < 0) {
+        // stok lebih kecil → perlu masuk
+        masuk = Math.abs(selisih);
+        const penyeimbang = {
+          id_barang: item.id_master_barang,
+          ed: item.ed,
+          nobatch: item.nobatch,
+          transaksi: 'Stok Opname',
+          stok_sebelum:stok.sisa,
+          masuk: Math.abs(selisih),
+          keluar: 0,
+          stok_sesudah: item.kenyataan,
+          keterangan: "Penyeimbang stok (selisih negatif)",
+          id_users
+        };
+        await insertRecord(conn, penyeimbang);
+      }
+
       // Insert detail record first
       const [result] = await conn.query(
         `
@@ -81,10 +141,10 @@ export const createStokOpname = async (data, id_users) => {
           item.hpp,
           item.kondisi_barang,
           item.keterangan,
-          item.awal,
-          item.masuk,
-          item.keluar,
-          item.sisa,
+          item.sisa || 0,
+          masuk,
+          keluar,
+          item.kenyataan,
           id_users,
           id_master_unit
         ]
@@ -92,60 +152,16 @@ export const createStokOpname = async (data, id_users) => {
 
       const insertedId = result.insertId;
 
-      // Calculate stok before opname
-      const stok = await calculateStok({
-        id_barang: item.id_master_barang,
-        ed: item.ed,
-        nobatch: item.nobatch
-      });
-
-      console.log(stok);
-
-      const selisih = stok.sisa - item.sisa;
-
-      // 1️⃣ If selisih exists, insert penyeimbang
-      if (selisih > 0) {
-        // stok lebih besar → perlu keluar
-        const penyeimbang = {
-          id_barang: item.id_master_barang,
-          ed: item.ed,
-          nobatch: item.nobatch,
-          transaksi: 'Stok Opname',
-          stok_sebelum: stok.sisa,
-          masuk: 0,
-          keluar: selisih,
-          stok_sesudah: item.sisa,
-          keterangan: "Penyeimbang stok (selisih positif)",
-          id_users
-        };
-        await insertRecord(conn, penyeimbang);
-      } else if (selisih < 0) {
-        // stok lebih kecil → perlu masuk
-        const penyeimbang = {
-          id_barang: item.id_master_barang,
-          ed: item.ed,
-          nobatch: item.nobatch,
-          transaksi: 'Stok Opname',
-          stok_sebelum:stok.sisa,
-          masuk: Math.abs(selisih),
-          keluar: 0,
-          stok_sesudah: item.sisa,
-          keterangan: "Penyeimbang stok (selisih negatif)",
-          id_users
-        };
-        await insertRecord(conn, penyeimbang);
-      }
-
       // 2️⃣ Insert actual opname record
       const actualData = {
         id_barang: item.id_master_barang,
         ed: item.ed,
         transaksi: 'Stok Opname',
         nobatch: item.nobatch,
-        stok_sebelum: item.sisa,
+        stok_sebelum: item.kenyataan,
         masuk: 0,
         keluar: 0,
-        stok_sesudah: item.sisa,
+        stok_sesudah: item.kenyataan,
         keterangan: `Stok opname detail #${insertedId}`,
         id_stok_opname_detail: insertedId,
         id_users

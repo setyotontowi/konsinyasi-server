@@ -39,7 +39,8 @@ export const calculateStok = async (data) => {
         nobatch,
         masuk : barang[0]?.masuk || 0,
         keluar : barang[0]?.keluar || 0,
-        sisa : barang[0]?.sisa || 0
+        sisa : barang[0]?.sisa || 0,
+        baru : barang.length > 0? 0 : 1,
     };
   } catch (err) {
     await conn.rollback();
