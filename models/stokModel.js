@@ -1,3 +1,4 @@
+import e from "cors";
 import pool from "../config/db.js";
 
 export const calculateStok = async (data) => {
@@ -49,3 +50,77 @@ export const calculateStok = async (data) => {
     conn.release();
   }
 };
+
+// Helper: insert a stock journal record
+export const insertRecord = async (conn, data) => {
+  const {
+    transaksi,
+    id_barang,
+    ed,
+    nobatch,
+    masuk = 0,
+    keluar = 0,
+    stok_sebelum = 0,
+    stok_sesudah = 0,
+    keterangan = "",
+    id_stok_opname_detail,
+    id_users,
+    id_master_unit,
+    baru,
+  } = data;
+
+  await conn.query(
+    `
+    INSERT INTO ts_history_stok 
+      (transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users, id_unit)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users, id_master_unit]
+  );
+
+  stokLive(conn, data);
+};
+
+export const stokLive = async (conn, data) => {
+  const {
+    id_barang,
+    ed,
+    nobatch,
+    masuk = 0,
+    keluar = 0,
+    stok_sesudah = 0,
+    baru
+  } = data;
+
+  const [currentData] = await conn.query(
+    `SELECT * FROM ch_stok_live WHERE id_barang = ? AND ed = ? AND nobatch = ?`,
+    [id_barang, ed, nobatch]
+  );
+
+  if (baru && (!currentData || currentData.length === 0)) {
+    await conn.query(
+      `
+      INSERT INTO ch_stok_live (id_barang, ed, nobatch, sisa, is_sync, is_valid)
+      VALUES (?, ?, ?, ?, 1, 1)
+      `,
+      [id_barang, ed, nobatch, stok_sesudah]
+    );
+    return;
+  }
+
+  if (currentData && currentData.length > 0) {
+    const stokLive = currentData[0];
+    const stokLiveSisa = stokLive.sisa + masuk - keluar; 
+    const is_valid = stokLiveSisa === stok_sesudah ? 1 : 0;
+
+    await conn.query(
+      `
+      UPDATE ch_stok_live
+      SET sisa = ?, is_valid = ?
+      WHERE id_barang = ? AND ed = ? AND nobatch = ?
+      `,
+      [stokLiveSisa, is_valid, id_barang, ed, nobatch]
+    );
+  }
+  
+}

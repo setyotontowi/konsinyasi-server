@@ -1,31 +1,6 @@
 import pool from "../config/db.js";
-import { calculateStok } from "./stokModel.js";
+import { calculateStok, insertRecord } from "./stokModel.js";
 
-// Helper: insert a stock journal record
-export const insertRecord = async (conn, data) => {
-  const {
-    transaksi,
-    id_barang,
-    ed,
-    nobatch,
-    masuk = 0,
-    keluar = 0,
-    stok_sebelum = 0,
-    stok_sesudah = 0,
-    keterangan = "",
-    id_stok_opname_detail,
-    id_users
-  } = data;
-
-  await conn.query(
-    `
-    INSERT INTO ts_history_stok 
-      (transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-    `,
-    [transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users]
-  );
-};
 
 export const createStokOpname = async (data, id_users) => {
   const conn = await pool.getConnection();
@@ -88,7 +63,9 @@ export const createStokOpname = async (data, id_users) => {
           keluar: 0,
           stok_sesudah: item.kenyataan,
           keterangan: "Stok Awal Sistem",
-          id_users
+          id_users,
+          id_master_unit,
+          baru: stok.baru
         };
         await insertRecord(conn, penyeimbang);  
       } else if (selisih > 0) {
@@ -104,7 +81,9 @@ export const createStokOpname = async (data, id_users) => {
           keluar: selisih,
           stok_sesudah: item.kenyataan,
           keterangan: "Penyeimbang stok (selisih positif)",
-          id_users
+          id_users,
+          id_master_unit,
+          baru: stok.baru
         };
         await insertRecord(conn, penyeimbang);
       } else if (selisih < 0) {
@@ -120,7 +99,9 @@ export const createStokOpname = async (data, id_users) => {
           keluar: 0,
           stok_sesudah: item.kenyataan,
           keterangan: "Penyeimbang stok (selisih negatif)",
-          id_users
+          id_users,
+          id_master_unit,
+          baru: stok.baru
         };
         await insertRecord(conn, penyeimbang);
       }
