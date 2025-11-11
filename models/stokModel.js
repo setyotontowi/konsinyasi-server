@@ -124,3 +124,71 @@ export const stokLive = async (conn, data) => {
   }
   
 }
+
+
+export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, user = {} }) => {
+  const offset = (page - 1) * limit;
+  const { id_barang, id_unit, start_date, end_date, transaksi } = filters;
+
+  let baseQuery = `
+    FROM ts_history_stok h
+    WHERE 1=1
+  `;
+  const params = [];
+
+  if (id_barang) {
+    baseQuery += ` AND h.id_barang = ?`;
+    params.push(id_barang);
+  }
+
+  if (id_unit) {
+    baseQuery += ` AND h.id_unit = ?`;
+    params.push(id_unit);
+  }
+
+  if (transaksi) {
+    baseQuery += ` AND h.transaksi = ?`;
+    params.push(transaksi);
+  }
+
+  if (start_date && end_date) {
+    baseQuery += ` AND DATE(h.created_at) BETWEEN ? AND ?`;
+    params.push(start_date, end_date);
+  }
+
+  const [countRows] = await pool.query(`SELECT COUNT(*) AS total ${baseQuery}`, params);
+  const total = countRows[0]?.total || 0;
+
+  const [rows] = await pool.query(
+    `
+    SELECT
+      h.id,
+      h.transaksi,
+      h.id_barang,
+      h.ed,
+      h.nobatch,
+      h.masuk,
+      h.keluar,
+      h.stok_sebelum,
+      h.stok_sesudah,
+      h.keterangan,
+      h.id_stok_opname_detail,
+      h.id_users,
+      h.id_unit,
+      h.created_at
+    ${baseQuery}
+    ORDER BY h.created_at DESC
+    LIMIT ? OFFSET ?
+    `,
+    [...params, limit, offset]
+  );
+
+  return {
+    data: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+    },
+  };
+};
