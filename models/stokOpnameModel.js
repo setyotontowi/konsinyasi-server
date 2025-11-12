@@ -300,3 +300,184 @@ export const getDistinctNoBatchByBarangAndEd = async (id_barang, ed) => {
   return rows;
 };
 
+export const updateStokOpname = async (id, data, id_users) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const { waktu_input, id_master_unit, details } = data;
+    if (!details || details.length === 0) throw new Error("Item harus diisi");
+
+    // Filter only editable items
+    const editableItems = details.filter(d => d.editable === 1);
+
+    if (editableItems.length === 0) {
+      throw new Error("Tidak ada item yang dapat diedit (editable = false semua)");
+    }
+
+    // Update header info (still keep old id)
+    await conn.query(
+      `UPDATE hd_stok_opname 
+       SET waktu_input = ?, id_master_unit = ?, updated_at = NOW() 
+       WHERE id = ?`,
+      [waktu_input, id_master_unit, id]
+    );
+
+    // Soft delete detail & stok history ONLY for editable items
+    const ids = editableItems.map(i => i.id_master_barang);
+    if (ids.length > 0) {
+      const placeholders = ids.map(() => "?").join(",");
+
+      // Delete related details
+      await conn.query(
+        `UPDATE dt_stok_opname_detail 
+         SET
+          id_stok_opname = null,
+          deleted_at = NOW()
+         WHERE id_stok_opname = ? AND id_master_barang IN (${placeholders})`,
+        [id, ...ids]
+      );
+
+      // Delete stok history linked to those items
+      await conn.query(
+        `UPDATE ts_history_stok 
+         SET deleted_at = NOW() 
+         WHERE transaksi = 'Stok Opname'
+         AND id_stok_opname_detail IN (
+            SELECT id FROM dt_stok_opname_detail 
+            WHERE id_stok_opname = ? 
+            AND id_master_barang IN (${placeholders})
+         )`,
+        [id, ...ids]
+      );
+
+      // Mark ch_stok_live invalid for resync
+      await conn.query(
+        `UPDATE ch_stok_live 
+         SET is_valid = 0 
+         WHERE (id_barang, ed, nobatch) IN (
+           SELECT id_master_barang, ed, nobatch 
+           FROM dt_stok_opname_detail 
+           WHERE id_stok_opname = ? 
+           AND id_master_barang IN (${placeholders})
+         )`,
+        [id, ...ids]
+      );
+    }
+
+    // Recreate ONLY editable item details
+    for (const item of editableItems) {
+      const stok = await calculateStok({
+        id_barang: item.id_master_barang,
+        ed: item.ed,
+        nobatch: item.nobatch,
+      });
+
+      const selisih = stok.sisa - item.kenyataan;
+      let masuk = 0, keluar = 0;
+
+      if (stok.baru) {
+        const penyeimbang = {
+          id_barang: item.id_master_barang,
+          ed: item.ed,
+          nobatch: item.nobatch,
+          transaksi: 'Stok Opname',
+          stok_sebelum: 0,
+          masuk: item.kenyataan,
+          keluar: 0,
+          stok_sesudah: item.kenyataan,
+          keterangan: "Stok Awal Sistem (edit)",
+          id_users,
+          id_master_unit,
+          baru: stok.baru,
+        };
+        await insertRecord(conn, penyeimbang);
+      } else if (selisih > 0) {
+        keluar = selisih;
+        const penyeimbang = {
+          id_barang: item.id_master_barang,
+          ed: item.ed,
+          nobatch: item.nobatch,
+          transaksi: 'Stok Opname',
+          stok_sebelum: stok.sisa,
+          masuk: 0,
+          keluar,
+          stok_sesudah: item.kenyataan,
+          keterangan: "Penyeimbang stok (edit - selisih positif)",
+          id_users,
+          id_master_unit,
+        };
+        await insertRecord(conn, penyeimbang);
+      } else if (selisih < 0) {
+        masuk = Math.abs(selisih);
+        const penyeimbang = {
+          id_barang: item.id_master_barang,
+          ed: item.ed,
+          nobatch: item.nobatch,
+          transaksi: 'Stok Opname',
+          stok_sebelum: stok.sisa,
+          masuk,
+          keluar: 0,
+          stok_sesudah: item.kenyataan,
+          keterangan: "Penyeimbang stok (edit - selisih negatif)",
+          id_users,
+          id_master_unit,
+        };
+        await insertRecord(conn, penyeimbang);
+      }
+
+      // Insert updated detail record
+      const [result] = await conn.query(
+        `INSERT INTO dt_stok_opname_detail 
+          (id_stok_opname, id_master_barang, nobatch, ed, hpp, kondisi_barang, keterangan, awal, masuk, keluar, sisa, id_users, id_master_unit)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          item.id_master_barang,
+          item.nobatch,
+          item.ed,
+          item.hpp,
+          item.kondisi_barang,
+          item.keterangan,
+          item.sisa || 0,
+          masuk,
+          keluar,
+          item.kenyataan,
+          id_users,
+          id_master_unit,
+        ]
+      );
+
+      const insertedId = result.insertId;
+
+      // Record the actual opname entry
+      await insertRecord(conn, {
+        id_barang: item.id_master_barang,
+        ed: item.ed,
+        nobatch: item.nobatch,
+        transaksi: 'Stok Opname',
+        stok_sebelum: item.kenyataan,
+        masuk: 0,
+        keluar: 0,
+        stok_sesudah: item.kenyataan,
+        keterangan: `Recreate opname detail #${insertedId}`,
+        id_stok_opname_detail: insertedId,
+        id_users,
+        id_master_unit,
+      });
+    }
+
+    await conn.commit();
+    return {
+      success: true,
+      message: `Stok opname berhasil diperbarui (${editableItems.length} item diubah)`,
+    };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+};
+
+

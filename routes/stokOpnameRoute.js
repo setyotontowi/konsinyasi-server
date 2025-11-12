@@ -6,7 +6,8 @@ import {
     fetchStokOpnameById, 
     getEDListByBarang, 
     getNoBatchListByBarangAndEd,
-    checkStock
+    checkStock, 
+    updateStokOpnameController
 } from "../controllers/stokOpnameController.js";
 import { getHistoryStok } from "../controllers/stokController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -17,6 +18,7 @@ const router = express.Router();
 router.post("/stok-opname", verifyToken, createStokOpnameController);
 router.get("/stok-opname", verifyToken, getStokOpname);
 router.get("/stok-opname/:id", verifyToken, fetchStokOpnameById);
+router.put("/stok-opname/:id", verifyToken, updateStokOpnameController);
 router.get("/barang/:id/eds", getEDListByBarang);
 router.get("/barang/:id/nobatch", getNoBatchListByBarangAndEd);
 router.post("/check-stock", checkStock);

@@ -1,5 +1,5 @@
 // controllers/stokOpnameController.js
-import { createStokOpname, getAllStokOpname, getStokOpnameById } from "../models/stokOpnameModel.js";
+import { createStokOpname, getAllStokOpname, getStokOpnameById, updateStokOpname } from "../models/stokOpnameModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
 export const createStokOpnameController = async (req, res) => {
@@ -171,6 +171,33 @@ export const checkStock = async (req, res) => {
       success: false,
       message: "Gagal memeriksa stok",
       error: err.message,
+    });
+  }
+};
+
+
+export const updateStokOpnameController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const id_users = req.user?.id || req.body.id_users;
+    const data = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "ID stok opname wajib diisi" });
+    }
+
+    const result = await updateStokOpname(id, data, id_users);
+
+    return res.status(200).json({
+      success: true,
+      message: "Stok opname berhasil diperbarui",
+      data: result,
+    });
+  } catch (err) {
+    console.error("updateStokOpnameController error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Gagal memperbarui stok opname",
     });
   }
 };
