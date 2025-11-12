@@ -128,7 +128,14 @@ export const stokLive = async (conn, data) => {
 
 export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, user = {} }) => {
   const offset = (page - 1) * limit;
-  const { id_barang, ed, nobatch, start_date, end_date } = filters;
+  let { id_barang, ed, nobatch, start_date, end_date } = filters;
+
+  if (ed) {
+      ed = new Date(ed)
+        .toISOString()
+        .slice(0, 19) // remove 'Z'
+        .replace('T', ' ');
+    }
 
   let baseQuery = `
     FROM ts_history_stok h
@@ -149,7 +156,7 @@ export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, us
 
   if (nobatch) {
     baseQuery += ` AND h.nobatch = ?`;
-    params.push(ed);
+    params.push(nobatch);
   }
 
  if (start_date && end_date) {
@@ -185,7 +192,7 @@ export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, us
       b.barang_nama as nama_barang,
       h.created_at
     ${baseQuery}
-    ORDER BY h.created_at DESC
+    ORDER BY h.created_at DESC, id DESC
     LIMIT ? OFFSET ?
     `,
     [...params, limit, offset]

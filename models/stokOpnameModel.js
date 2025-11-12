@@ -305,8 +305,15 @@ export const updateStokOpname = async (id, data, id_users) => {
   try {
     await conn.beginTransaction();
 
-    const { waktu_input, id_master_unit, details } = data;
+    let { waktu_input, id_master_unit, details } = data;
     if (!details || details.length === 0) throw new Error("Item harus diisi");
+
+    if (waktu_input) {
+      waktu_input = new Date(waktu_input)
+        .toISOString()
+        .slice(0, 19) // remove 'Z'
+        .replace('T', ' ');
+    }
 
     // Filter only editable items
     const editableItems = details.filter(d => d.editable === 1);
