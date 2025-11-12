@@ -144,7 +144,7 @@ export const createStokOpname = async (data, id_users) => {
         masuk: 0,
         keluar: 0,
         stok_sesudah: item.kenyataan,
-        keterangan: `Stok opname detail #${insertedId}`,
+        keterangan: item.keterangan | `Stok opname detail #${insertedId}`,
         id_stok_opname_detail: insertedId,
         id_users
       };

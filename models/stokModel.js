@@ -128,10 +128,11 @@ export const stokLive = async (conn, data) => {
 
 export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, user = {} }) => {
   const offset = (page - 1) * limit;
-  const { id_barang, id_unit, start_date, end_date, transaksi } = filters;
+  const { id_barang, ed, nobatch, start_date, end_date } = filters;
 
   let baseQuery = `
     FROM ts_history_stok h
+    JOIN md_barang b ON h.id_barang = b.barang_id
     WHERE 1=1
   `;
   const params = [];
@@ -141,19 +142,25 @@ export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, us
     params.push(id_barang);
   }
 
-  if (id_unit) {
-    baseQuery += ` AND h.id_unit = ?`;
-    params.push(id_unit);
+  if (ed) {
+    baseQuery += ` AND h.ed = ?`;
+    params.push(ed);
   }
 
-  if (transaksi) {
-    baseQuery += ` AND h.transaksi = ?`;
-    params.push(transaksi);
+  if (nobatch) {
+    baseQuery += ` AND h.nobatch = ?`;
+    params.push(ed);
   }
 
-  if (start_date && end_date) {
+ if (start_date && end_date) {
     baseQuery += ` AND DATE(h.created_at) BETWEEN ? AND ?`;
     params.push(start_date, end_date);
+  } else if (start_date) {
+    baseQuery += ` AND DATE(h.created_at) >= ?`;
+    params.push(start_date);
+  } else if (end_date) {
+    baseQuery += ` AND DATE(h.created_at) <= ?`;
+    params.push(end_date);
   }
 
   const [countRows] = await pool.query(`SELECT COUNT(*) AS total ${baseQuery}`, params);
@@ -175,6 +182,7 @@ export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, us
       h.id_stok_opname_detail,
       h.id_users,
       h.id_unit,
+      b.barang_nama as nama_barang,
       h.created_at
     ${baseQuery}
     ORDER BY h.created_at DESC

@@ -8,10 +8,10 @@ export const getHistoryStok = async (req, res) => {
 
     const filters = {
       id_barang: req.query.id_barang,
-      id_unit: req.query.id_unit,
+      ed: req.query.ed,
+      nobatch: req.query.nobatch,
       start_date: req.query.start_date,
       end_date: req.query.end_date,
-      transaksi: req.query.transaksi,
     };
 
     const user = req.user || {}; // assuming middleware sets this (e.g., auth)
