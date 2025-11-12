@@ -110,7 +110,7 @@ export const createStokOpname = async (data, id_users) => {
       const [result] = await conn.query(
         `
         INSERT INTO dt_stok_opname_detail
-          (id_stok_opname, id_master_barang, nobatch, ed, hpp, bulan
+          (id_stok_opname, id_master_barang, nobatch, ed, hpp, bulan,
            kondisi_barang, keterangan, awal, masuk, keluar, sisa, id_users, id_master_unit)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
