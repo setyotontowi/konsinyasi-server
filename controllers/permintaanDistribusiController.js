@@ -157,3 +157,23 @@ export const deletePermintaanDistribusiDetail = async (req, res) => {
     return sendResponse(res, {}, "Internal Server Error", 500);
   }
 };
+
+/**
+ * ✅ PUT /pemakaian
+ * Update qty real
+ */
+export const pemakaianBarang = async (req, res) => {
+  try {
+    const data = { ...req.body };
+
+    const updated = await PermintaanModel.pemakaianBarang(data);
+    if (!updated) {
+      return sendResponse(res, {}, "Data not found or not updated", 404);
+    }
+
+    return sendResponse(res, {}, "Permintaan distribusi updated successfully");
+  } catch (error) {
+    console.error("Error updating permintaan:", error);
+    return sendResponse(res, {}, "Internal Server Error", 500);
+  }
+};

@@ -258,7 +258,7 @@ export const editPermintaanDistribusiDetail = async (data) => {
   const values = [];
 
   // Optional whitelist for safety
-  const allowedFields = ["id_master_satuan", "qty", "qty_real"];
+  const allowedFields = ["id_master_satuan", "qty"];
 
   for (const key in fieldsToUpdate) {
     if (allowedFields.includes(key)) {
@@ -295,4 +295,42 @@ export const deletePermintaanDistribusiDetail = async (pdd_id) => {
     [pdd_id]
   );
   return result.affectedRows > 0;
+};
+
+
+
+// --------------------------
+// Soft delete detail item
+// --------------------------
+export const pemakaianBarang = async (data) => {
+  const conn = await pool.getConnection();
+  try{
+    await conn.beginTransaction()
+    const { pd_id, ...fieldsToUpdate } = data;
+
+    const fields = [];
+    const values = [];
+
+
+    const items = data.items
+    for (const item of items){
+      console.log(item);
+      await conn.query(
+        `UPDATE dt_permintaan_distribusi_detail 
+         SET qty_real = ?
+         WHERE pdd_id = ?`, 
+         [item.qty_real, item.pdd_id]
+      );
+    }
+
+    await conn.commit();
+    return { success: true, pd_id };
+
+  } catch (err) {
+    console.log(err);
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 };
