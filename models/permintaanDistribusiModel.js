@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { insertNewTransaction } from "./stokModel.js";
 
 // --------------------------
 // Create new permintaan distribusi + details
@@ -313,6 +314,7 @@ export const pemakaianBarang = async (data) => {
 
 
     const items = data.items
+
     for (const item of items){
       console.log(item);
       await conn.query(
@@ -321,6 +323,17 @@ export const pemakaianBarang = async (data) => {
          WHERE pdd_id = ?`, 
          [item.qty_real, item.pdd_id]
       );
+
+      item.tipe = "pemakaian"
+      item.id = item.pdd_id
+      item.masuk = 0
+      item.keluar = item.qty_real
+      item.id_users = data.id_users
+      item.id_master_unit = data.id_master_unit
+
+      // Insert into journal
+      insertNewTransaction(conn, item)
+      
     }
 
     await conn.commit();

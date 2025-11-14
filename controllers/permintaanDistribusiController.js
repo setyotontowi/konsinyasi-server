@@ -166,6 +166,9 @@ export const pemakaianBarang = async (req, res) => {
   try {
     const data = { ...req.body };
 
+    data.id_users = req.user.id
+    data.id_master_unit = req.user.id_master_unit
+
     const updated = await PermintaanModel.pemakaianBarang(data);
     if (!updated) {
       return sendResponse(res, {}, "Data not found or not updated", 404);

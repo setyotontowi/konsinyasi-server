@@ -8,6 +8,8 @@ export const calculateStok = async (data) => {
 
     const {id_barang, ed, nobatch} = data
 
+    console.log("calculate stok data", data);
+
     const missing = [];
     if (!id_barang) missing.push("id_barang");
     if (!ed) missing.push("ed");
@@ -63,23 +65,124 @@ export const insertRecord = async (conn, data) => {
     stok_sebelum = 0,
     stok_sesudah = 0,
     keterangan = "",
-    id_stok_opname_detail,
+    id, // this is the source id you want to store
     id_users,
     id_master_unit,
-    baru,
   } = data;
+
+  // Prepare dynamic columns
+  let id_stok_opname_detail = null;
+  let id_penerimaan_distribusi = null;
+
+  if (transaksi === "stok opname") {
+    id_stok_opname_detail = id;
+  } else if (transaksi === "penerimaan") {
+    id_penerimaan_distribusi = id;
+  }
 
   await conn.query(
     `
     INSERT INTO ts_history_stok 
-      (transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users, id_unit)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, 
+       id_stok_opname_detail, id_penerimaan_distribusi, id_users, id_unit)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-    [transaksi, id_barang, ed, nobatch, masuk, keluar, stok_sebelum, stok_sesudah, keterangan, id_stok_opname_detail, id_users, id_master_unit]
+    [
+      transaksi,
+      id_barang,
+      ed,
+      nobatch,
+      masuk,
+      keluar,
+      stok_sebelum,
+      stok_sesudah,
+      keterangan,
+      id_stok_opname_detail,
+      id_penerimaan_distribusi,
+      id_users,
+      id_master_unit,
+    ]
   );
 
-  stokLive(conn, data);
+  await stokLive(conn, data);
 };
+
+export const insertNewTransaction = async (conn, data) => {
+  const {
+    id_master_barang,
+    tipe,
+    id,
+    masuk = 0,
+    keluar = 0,
+    id_users,
+    id_master_unit
+  } = data;
+
+  // Get candidate stok (FIFO: earliest ED)
+  const rows = await conn.query(
+    `SELECT * FROM ch_stok_live 
+     WHERE id_barang = ?
+     ORDER BY ed ASC`,
+    [id_master_barang]
+  );
+
+  // rows = [ [resultRows], fields ]
+  const list = rows && rows[0] ? rows[0] : [];
+  const datacandidate = list.length > 0 ? list[0] : null;
+
+  if (!datacandidate) {
+    throw new Error(`stok barang tidak ada`);
+  }
+
+  let stokData = { ...datacandidate }; // clone to avoid mutation bugs
+
+  // If invalid, recalc stok
+  if (!stokData.is_valid) {
+    const stokReal = await calculateStok({
+      id_barang: stokData.id_barang,
+      ed: stokData.ed,
+      nobatch: stokData.nobatch
+    });
+
+    stokData = {
+      ...stokData,
+      id_barang: id_master_barang,
+      id_users,
+      id_unit: id_master_unit,
+      stok_sebelum: stokReal.sisa,
+      masuk,
+      keluar,
+      stok_sesudah: stokReal.sisa + masuk - keluar
+    };
+
+    if (tipe === "pemakaian") {
+      stokData.transaksi = "pemakaian";
+      stokData.id_penerimaan_distribusi = id;
+    }
+  }
+
+  // Sanitize data so insertRecord gets ONLY required fields.
+  const cleanRecord = {
+    transaksi: stokData.transaksi,
+    id_barang: stokData.id_barang,
+    ed: stokData.ed,
+    nobatch: stokData.nobatch,
+    masuk: stokData.masuk,
+    keluar: stokData.keluar,
+    stok_sebelum: stokData.stok_sebelum,
+    stok_sesudah: stokData.stok_sesudah,
+    keterangan: stokData.keterangan || "",
+    id: id, // this will be checked inside insertRecord
+    id_users,
+    id_master_unit
+  };
+
+  console.log
+
+  await insertRecord(conn, cleanRecord);
+};
+
+
 
 export const stokLive = async (conn, data) => {
   const {
