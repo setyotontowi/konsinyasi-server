@@ -83,7 +83,9 @@ export const listItems = async (req, res) => {
 
     const filters = {
         nama: req.query.nama || undefined,
-        id_barang_simrs : req.query.id_barang_simrs || undefined
+        id_barang_simrs : req.query.id_barang_simrs || undefined,
+        satuan : req.query.satuan || undefined,
+        nama_pabrik : req.query.nama_pabrik || undefined,
     };
 
 

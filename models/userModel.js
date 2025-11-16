@@ -2,7 +2,9 @@ import pool from "../config/db.js";
 
 export const findByUsername = async (username) => {
   const [rows] = await pool.query(
-    "SELECT * FROM md_users WHERE username = ? AND status_active = 1 LIMIT 1",
+    `SELECT md_users.*, md_unit.nama as nama_unit FROM md_users 
+    LEFT JOIN md_unit ON md_users.id_master_unit = md_unit.id
+    WHERE username = ? AND status_active = 1 LIMIT 1`,
     [username]
   );
   return rows[0];

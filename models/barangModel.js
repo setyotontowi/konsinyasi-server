@@ -61,8 +61,16 @@ const offset = (page - 1) * limit;
     let params = [];
 
     if (filters.nama) {
-    whereClauses.push('(barang_nama LIKE ? OR serial_number LIKE ?)');
-    params.push(`%${filters.nama}%`, `%${filters.nama}%`);
+        whereClauses.push('(barang_nama LIKE ? OR serial_number LIKE ?)');
+        params.push(`%${filters.nama}%`, `%${filters.nama}%`);
+    }
+    if (filters.satuan) {
+        whereClauses.push('md_satuan.mst_nama LIKE ?');
+        params.push(`%${filters.satuan}%`);
+    }
+    if (filters.nama_pabrik) {
+        whereClauses.push('md_unit.nama LIKE ?');
+        params.push(`%${filters.nama_pabrik}%`);
     }
 
     const whereSQL = `WHERE ${whereClauses.join(" AND ")}`; 
