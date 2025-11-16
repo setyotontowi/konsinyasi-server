@@ -65,18 +65,23 @@ const offset = (page - 1) * limit;
         params.push(`%${filters.nama}%`, `%${filters.nama}%`);
     }
     if (filters.satuan) {
-        whereClauses.push('md_satuan.mst_nama LIKE ?');
-        params.push(`%${filters.satuan}%`);
+        whereClauses.push('md_barang.id_satuan_kecil = ?');
+        params.push(`${filters.satuan}`);
     }
     if (filters.nama_pabrik) {
-        whereClauses.push('md_unit.nama LIKE ?');
-        params.push(`%${filters.nama_pabrik}%`);
+        whereClauses.push('md_barang.id_pabrik = ?');
+        params.push(`${filters.nama_pabrik}`);
     }
 
     const whereSQL = `WHERE ${whereClauses.join(" AND ")}`; 
 
-    const [countRows] = await pool.query(`SELECT COUNT(*) as total FROM md_barang ${whereSQL}`, params);
+    const [countRows] = await pool.query(`SELECT COUNT(*) as total 
+        FROM md_barang
+        JOIN md_satuan ON md_barang.id_satuan_kecil = md_satuan.mst_id
+        JOIN md_unit ON md_barang.id_pabrik = md_unit.id ${whereSQL}`, params);
     const total = countRows[0].total;
+
+    console.log(whereSQL, params);
 
     const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan, md_unit.nama as nama_pabrik FROM 
         md_barang
