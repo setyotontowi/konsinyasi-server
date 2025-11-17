@@ -312,23 +312,51 @@ export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, us
 };
 
 
-export const getStokLive = async ({page = 1, limit = 20, filters= {}}) => {
+export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
+  const offset = (page - 1) * limit;
 
-  const offset = (page - 1) * limit; 
+  // Extract filters
+  const { id_barang, ed, nobatch } = filters;
 
-  const [counts] = await pool.query(
-    `SELECT COUNT(*) as total FROM ch_stok_live`
+  // Build dynamic WHERE clause
+  let where = "WHERE 1=1";
+  const params = [];
+
+  if (id_barang) {
+    where += " AND ch_stok_live.id_barang = ?";
+    params.push(id_barang);
+  }
+
+  if (ed) {
+    where += " AND DATE(ch_stok_live.ed) = ?";
+    params.push(ed);
+  }
+
+  if (nobatch) {
+    where += " AND ch_stok_live.nobatch = ?";
+    params.push(nobatch);
+  }
+
+  // Count with filter
+  const [countRows] = await pool.query(
+    `SELECT COUNT(*) AS total 
+     FROM ch_stok_live
+     ${where}`,
+    params
   );
 
-  const total = counts[0]?.total || 0;
+  const total = countRows[0]?.total || 0;
 
+  // Paginated data with filter
   const [rows] = await pool.query(
     `SELECT ch_stok_live.*, md_barang.barang_nama
-    FROM ch_stok_live
-    JOIN md_barang ON ch_stok_live.id_barang = md_barang.barang_id
-    LIMIT ? OFFSET ?`,
-    [limit, offset]
-  )
+     FROM ch_stok_live
+     JOIN md_barang ON ch_stok_live.id_barang = md_barang.barang_id
+     ${where}
+     ORDER BY updated_at DESC
+     LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
 
   return {
     data: rows,
@@ -338,5 +366,4 @@ export const getStokLive = async ({page = 1, limit = 20, filters= {}}) => {
       total,
     },
   };
-
-}
+};
