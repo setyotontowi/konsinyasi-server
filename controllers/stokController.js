@@ -1,6 +1,8 @@
 import { getAllHistoryStok, getStokLive } from "../models/stokModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
+const GROUP_VENDOR = 3;
+
 export const getHistoryStok = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -44,7 +46,19 @@ export const getAllStok = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
-    const { data, pagination } = await getStokLive({ page, limit, filters: req.query });
+
+
+    // If user group is vendor, then add unit into the filter. So the vendor can only see their items
+
+    let filters = req.query || {};
+
+    console.log("User Info:", GROUP_VENDOR);
+    if (req.user && req.user.role === GROUP_VENDOR) {
+      console.log("masuk");
+      filters = { ...filters, unit: req.user.unit };
+    }
+
+    const { data, pagination } = await getStokLive({ page, limit, filters: filters });
 
     return sendPaginatedResponse(
       res,

@@ -316,7 +316,7 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
   const offset = (page - 1) * limit;
 
   // Extract filters
-  const { id_barang, ed, nobatch } = filters;
+  const { id_barang, ed, nobatch, unit } = filters;
 
   // Build dynamic WHERE clause
   let where = "WHERE 1=1";
@@ -337,10 +337,16 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
     params.push(nobatch);
   }
 
+  if (unit) {
+    where += " AND md_barang.id_pabrik = ?";
+    params.push(unit);
+  }
+
   // Count with filter
   const [countRows] = await pool.query(
     `SELECT COUNT(*) AS total 
      FROM ch_stok_live
+     JOIN md_barang ON ch_stok_live.id_barang = md_barang.barang_id
      ${where}`,
     params
   );
@@ -349,7 +355,7 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
 
   // Paginated data with filter
   const [rows] = await pool.query(
-    `SELECT ch_stok_live.*, md_barang.barang_nama
+    `SELECT ch_stok_live.*, md_barang.barang_nama, md_barang.id_pabrik
      FROM ch_stok_live
      JOIN md_barang ON ch_stok_live.id_barang = md_barang.barang_id
      ${where}
