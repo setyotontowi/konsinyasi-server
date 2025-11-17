@@ -310,3 +310,33 @@ export const getAllHistoryStok = async ({ page = 1, limit = 20, filters = {}, us
     },
   };
 };
+
+
+export const getStokLive = async ({page = 1, limit = 20, filters= {}}) => {
+
+  const offset = (page - 1) * limit; 
+
+  const [counts] = await pool.query(
+    `SELECT COUNT(*) as total FROM ch_stok_live`
+  );
+
+  const total = counts[0]?.total || 0;
+
+  const [rows] = await pool.query(
+    `SELECT ch_stok_live.*, md_barang.barang_nama
+    FROM ch_stok_live
+    JOIN md_barang ON ch_stok_live.id_barang = md_barang.barang_id
+    LIMIT ? OFFSET ?`,
+    [limit, offset]
+  )
+
+  return {
+    data: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+    },
+  };
+
+}

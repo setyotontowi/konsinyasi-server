@@ -9,7 +9,7 @@ import {
     checkStock, 
     updateStokOpnameController
 } from "../controllers/stokOpnameController.js";
-import { getHistoryStok } from "../controllers/stokController.js";
+import { getHistoryStok, getAllStok } from "../controllers/stokController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -22,6 +22,7 @@ router.put("/stok-opname/:id", verifyToken, updateStokOpnameController);
 router.get("/barang/:id/eds", getEDListByBarang);
 router.get("/barang/:id/nobatch", getNoBatchListByBarangAndEd);
 router.post("/check-stock", checkStock);
+router.get("/get-all-stok", verifyToken, getAllStok);
 
 router.get("/journal", verifyToken, getHistoryStok);
 
