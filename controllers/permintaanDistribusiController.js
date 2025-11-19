@@ -11,7 +11,7 @@ export const getAllPermintaanDistribusi = async (req, res) => {
     const user = req.user; // from JWT middleware
 
     // Build filters
-    const permintaanDistribusi = permintaan === 'true'? 1 : 0
+    const permintaanDistribusi = permintaan === 'true'? 1 : permintaan === 'false'? 0 : undefined;
     const filters = { start, end, id_master_unit, id_master_unit_tujuan, search, permintaanDistribusi };
 
     // 🔒 Restrict by unit if not admin

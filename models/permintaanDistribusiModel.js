@@ -85,9 +85,14 @@ export const getAllPermintaanDistribusi = async ({
     params.push(`%${filters.search}%`, `%${filters.search}%`);
   }
 
-  if (filters.permintaanDistribusi) {
-    where += " AND d.id IS NULL";
+  console.log("Permintaan", filters.permintaanDistribusi)
+  if (filters.permintaanDistribusi === 1) {
+    where += " AND d.id IS NULL"; 
+  } else if (filters.permintaanDistribusi == 0) {
+    where += " AND d.id IS NOT NULL";
   }
+
+  console.log("where", where);
   
   const [rows] = await pool.query(
     `SELECT hd.*, ua.nama as unit_asal, ut.nama as unit_tujuan,
