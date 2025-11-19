@@ -12,6 +12,7 @@ export const getAllDistribusi = async (req, res) => {
 
     const filters = {
       id_master_unit: req.query.id_master_unit,
+      id_master_unit_tujuan: req.query.id_master_unit_tujuan,
       id_permintaan_distribusi: req.query.id_permintaan_distribusi,
       start_date: req.query.start_date,
       end_date: req.query.end_date,

@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 import { calculateStok, insertRecord } from "./stokModel.js";
-
+import { toNumber } from "../helpers/utilHelper.js"
 
 export const createStokOpname = async (data, id_users) => {
   const conn = await pool.getConnection();
@@ -47,7 +47,10 @@ export const createStokOpname = async (data, id_users) => {
         nobatch: item.nobatch
       });
 
-      const selisih = stok.sisa - item.kenyataan;
+      const sisa = toNumber(stok.sisa);
+      const kenyataan = toNumber(item.kenyataan);
+
+      const selisih = sisa - kenyataan
       let masuk = 0
       let keluar = 0
 
@@ -314,6 +317,7 @@ export const updateStokOpname = async (id, data, id_users) => {
         .slice(0, 19) // remove 'Z'
         .replace('T', ' ');
     }
+    const bulan = waktu_input.split(' ')[0];
 
     // Filter only editable items
     const editableItems = details.filter(d => d.editable === 1);
@@ -380,7 +384,10 @@ export const updateStokOpname = async (id, data, id_users) => {
         nobatch: item.nobatch,
       });
 
-      const selisih = stok.sisa - item.kenyataan;
+      const sisa = toNumber(stok.sisa);
+      const kenyataan = toNumber(item.kenyataan);
+
+      const selisih = sisa - kenyataan
       let masuk = 0, keluar = 0;
 
       if (stok.baru) {
@@ -436,14 +443,15 @@ export const updateStokOpname = async (id, data, id_users) => {
       // Insert updated detail record
       const [result] = await conn.query(
         `INSERT INTO dt_stok_opname_detail 
-          (id_stok_opname, id_master_barang, nobatch, ed, hpp, kondisi_barang, keterangan, awal, masuk, keluar, sisa, id_users, id_master_unit)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id_stok_opname, id_master_barang, nobatch, ed, hpp, bulan, kondisi_barang, keterangan, awal, masuk, keluar, sisa, id_users, id_master_unit)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           item.id_master_barang,
           item.nobatch,
           item.ed,
           item.hpp,
+          bulan,
           item.kondisi_barang,
           item.keterangan,
           item.sisa || 0,

@@ -1,5 +1,5 @@
-import e from "cors";
 import pool from "../config/db.js";
+import { toNumber } from "../helpers/utilHelper.js";
 
 export const calculateStok = async (data) => {
   const conn = await pool.getConnection();
@@ -200,6 +200,8 @@ export const stokLive = async (conn, data) => {
     [id_barang, ed, nobatch]
   );
 
+  console.log("currentData", currentData);
+
   if (baru && (!currentData || currentData.length === 0)) {
     await conn.query(
       `
@@ -213,7 +215,8 @@ export const stokLive = async (conn, data) => {
 
   if (currentData && currentData.length > 0) {
     const stokLive = currentData[0];
-    const stokLiveSisa = stokLive.sisa + masuk - keluar; 
+    const stokLiveSisa = toNumber(stokLive.sisa) + masuk - keluar; 
+    console.log("stok live sisa", stokLiveSisa, masuk, keluar);
     const is_valid = stokLiveSisa === stok_sesudah ? 1 : 0;
 
     await conn.query(
@@ -359,7 +362,7 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
      FROM ch_stok_live
      JOIN md_barang ON ch_stok_live.id_barang = md_barang.barang_id
      ${where}
-     ORDER BY updated_at DESC
+     ORDER BY sisa ASC, updated_at DESC
      LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
