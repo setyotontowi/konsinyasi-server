@@ -5,7 +5,7 @@ import pool from "../config/db.js";
  * Supports filter by id_master_unit, id_permintaan_distribusi, and waktu_kirim date range.
  */
 export const getAllDistribusi = async (filters = {}) => {
-  const { id_master_unit, id_permintaan_distribusi, start_date, end_date } = filters;
+  const { id_master_unit, id_master_unit_tujuan, id_permintaan_distribusi, start_date, end_date } = filters;
 
   let whereClauses = ["d.deleted_at IS NULL"];
   let values = [];
@@ -13,6 +13,11 @@ export const getAllDistribusi = async (filters = {}) => {
   if (id_master_unit) {
     whereClauses.push("d.id_master_unit = ?");
     values.push(id_master_unit);
+  }
+
+  if (id_master_unit_tujuan) {
+    whereClauses.push("pd.id_master_unit_tujuan = ?");
+    values.push(id_master_unit_tujuan);
   }
 
   if (id_permintaan_distribusi) {

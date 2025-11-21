@@ -60,6 +60,8 @@ export const getAllPermintaanDistribusi = async ({
 } = {}) => {
   const offset = (page - 1) * limit;
 
+  console.log(filters, user.role);
+
   let where = "WHERE hd.deleted_at IS NULL";
   const params = [];
 
@@ -67,6 +69,9 @@ export const getAllPermintaanDistribusi = async ({
   if (user.role !== 1 && user.id_master_unit) {
     where += " AND hd.id_master_unit = ?";
     params.push(user.id_master_unit);
+  } else if (user.role == 1 && filters.id_master_unit) {
+    where += " AND hd.id_master_unit = ?";
+    params.push(filters.id_master_unit);
   }
 
   // 🔹 Additional filters
