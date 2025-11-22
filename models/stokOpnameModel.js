@@ -180,12 +180,21 @@ export const getAllStokOpname = async ({
   if (user.role !== 1 && user.id_master_unit) {
     where += " AND hd.id_master_unit = ?";
     params.push(user.id_master_unit);
+  } else if (user.role == 1 && filters.id_master_unit) {
+    where += " AND hd.id_master_unit = ?";
+    params.push(filters.id_master_unit);
   }
 
   // 🔹 Additional filters
   if (filters.start && filters.end) {
     where += " AND hd.waktu_input BETWEEN ? AND ?";
     params.push(filters.start, filters.end);
+  } else if (filters.start) {
+    where += " AND hd.waktu_input >= ?";
+    params.push(filters.start);
+  } else if (filters.end) {
+    where += " AND hd.waktu_input <= ?";
+    params.push(filters.end);
   }
   
   const [rows] = await pool.query(

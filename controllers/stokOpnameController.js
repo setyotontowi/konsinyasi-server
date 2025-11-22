@@ -37,8 +37,9 @@ export const getStokOpname = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
 
     const filters = {
-      start: req.query.start,
-      end: req.query.end,
+      start: req.query.start_date,
+      end: req.query.end_date,
+      id_master_unit: req.query.id_master_unit,
     };
 
     const user = req.user || {}; // assuming middleware sets this
