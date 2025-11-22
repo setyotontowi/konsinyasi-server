@@ -141,7 +141,6 @@ export const getNoBatchListByBarangAndEd = async (req, res) => {
 
 import { calculateStok } from "../models/stokModel.js";
 
-// ✅ POST /inventory/check-stock
 export const checkStock = async (req, res) => {
   try {
     const { barang, nobatch, ed } = req.body;

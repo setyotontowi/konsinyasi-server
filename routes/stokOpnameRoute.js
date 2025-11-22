@@ -21,7 +21,7 @@ router.get("/stok-opname/:id", verifyToken, fetchStokOpnameById);
 router.put("/stok-opname/:id", verifyToken, updateStokOpnameController);
 router.get("/barang/:id/eds", getEDListByBarang);
 router.get("/barang/:id/nobatch", getNoBatchListByBarangAndEd);
-router.post("/check-stock", checkStock);
+router.get("/check-stock", checkStock);
 router.get("/get-all-stok", verifyToken, getAllStok);
 
 router.get("/journal", verifyToken, getHistoryStok);

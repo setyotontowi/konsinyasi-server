@@ -52,9 +52,7 @@ export const getAllStok = async (req, res) => {
 
     let filters = req.query || {};
 
-    console.log("User Info:", GROUP_VENDOR);
     if (req.user && req.user.role === GROUP_VENDOR) {
-      console.log("masuk");
       filters = { ...filters, unit: req.user.unit };
     }
 
