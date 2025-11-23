@@ -1,5 +1,8 @@
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 import * as PurchaseModel from "../models/purchaseModel.js";
+import fs from "fs-extra";
+import { PDFDocument, StandardFonts } from "pdf-lib";
+import pool from "../config/db.js";
 
 // --------------------------
 // GET USED ITEMS
@@ -77,5 +80,83 @@ export const deletePurchaseOrder = async (req, res) => {
         return sendResponse(res, {}, "Purchase order deleted");
     } catch (err) {
         return sendResponse(res, { error: err.message }, "Failed to delete purchase order", 500);
+    }
+};
+
+// --------------------------
+// PRINT PURCHASE ORDER
+// --------------------------
+export const printPurchaseOrder = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        // 1. Load PO header + detail
+        const [poRows] = await pool.query(
+            `SELECT * FROM hd_purchase_order WHERE id = ?`,
+            [id]
+        );
+
+        if (poRows.length === 0)
+            return sendResponse(res, {}, "Purchase order not found", 404);
+
+        const po = poRows[0];
+
+        const [detailRows] = await pool.query(
+            `SELECT * FROM dt_purchase_order_detail WHERE id_po = ?`,
+            [id]
+        );
+
+        // 2. Generate PDF
+        const pdf = await PDFDocument.create();
+        const page = pdf.addPage([595, 842]); // A4
+        const font = await pdf.embedFont(StandardFonts.Helvetica);
+
+        let y = 800;
+
+        page.drawText("PURCHASE ORDER", { x: 50, y, size: 20, font });
+        y -= 30;
+
+        page.drawText(`Tanggal Entri : ${po.tanggal_entri}`, { x: 50, y, size: 12, font });
+        y -= 15;
+        page.drawText(`Tanggal Datang : ${po.tanggal_datang}`, { x: 50, y, size: 12, font });
+        y -= 15;
+        page.drawText(`Subtotal : ${po.subtotal}`, { x: 50, y, size: 12, font });
+        y -= 15;
+        page.drawText(`PPN : ${po.ppn}%`, { x: 50, y, size: 12, font });
+        y -= 15;
+        page.drawText(`Total : ${po.total}`, { x: 50, y, size: 12, font });
+        y -= 30;
+
+        page.drawText("DETAIL BARANG:", { x: 50, y, size: 14, font });
+        y -= 20;
+
+        for (const d of detailRows) {
+            page.drawText(
+                `Barang #${d.id_barang} | Qty: ${d.permintaan} | Harga: ${d.harga_satuan}`,
+                { x: 50, y, size: 12, font }
+            );
+            y -= 15;
+            if (y < 50) break; // simple overflow protection
+        }
+
+        const pdfBytes = await pdf.save();
+
+        // 3. Save to disk
+        const dir = "./uploads/purchase";
+        await fs.ensureDir(dir);
+
+        const filePath = `${dir}/po-${id}.pdf`;
+        await fs.writeFile(filePath, pdfBytes);
+
+        const publicPath = `${req.protocol}://${req.get("host")}/uploads/purchase/po-${id}.pdf`;
+
+        // 4. Save path into DB
+        await PurchaseModel.savePurchaseOrderPrintPath(id, publicPath);
+
+        return sendResponse(res, { id, print_path: publicPath }, "PDF generated");
+
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, { error: err.message }, "Failed to generate PDF", 500);
     }
 };

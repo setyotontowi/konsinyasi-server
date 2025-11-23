@@ -5,7 +5,8 @@ import {
   listPurchaseOrders,
   createPurchaseOrder,
   updatePurchaseOrder,
-  deletePurchaseOrder
+  deletePurchaseOrder,
+  printPurchaseOrder
 } from "../controllers/purchaseController.js";
 
 const router = express.Router();
@@ -26,5 +27,7 @@ router.put("/:id", verifyToken, updatePurchaseOrder);
 
 // soft delete
 router.delete("/:id", verifyToken, deletePurchaseOrder);
+
+router.post("/:id/print", verifyToken, printPurchaseOrder);
 
 export default router;

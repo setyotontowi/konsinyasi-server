@@ -207,3 +207,11 @@ export const deletePurchaseOrder = async (id) => {
     `, [id]);
     return true;
 };
+
+export const savePurchaseOrderPrintPath = async (id, printPath) => {
+    await pool.query(
+        `UPDATE hd_purchase_order SET print_path = ?, cetak = 'sudah' WHERE id = ?`,
+        [printPath, id]
+    );
+    return true;
+};
