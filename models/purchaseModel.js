@@ -9,23 +9,25 @@ export const listUsedbarang = async ({ page = 1, limit = 20 }) => {
     const [countRows] = await pool.query(`
         SELECT mu.nama as nama_unit, mu2.nama, hpd.*, COUNT(dpdd.pdd_id) as jumlah
         FROM hd_permintaan_distribusi hpd 
+        LEFT JOIN hd_purchase_order hpo ON hpd.pd_id = hpo.id_permintaan_distribusi
         JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
         JOIN ts_distribusi td ON td.id_permintaan_distribusi = hpd.pd_id 
         JOIN md_barang mb ON dpdd.id_master_barang = mb.barang_id 
         JOIN md_unit mu ON hpd.id_master_unit_tujuan = mu.id 
         JOIN md_users mu2 ON hpd.id_users = mu2.id 
-        WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL
+        WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL AND hpo.id IS NULL
     `);
 
     const [rows] = await pool.query(`
         SELECT mu.nama as nama_unit, mu2.nama, hpd.*, COUNT(dpdd.pdd_id) as jumlah, td.waktu_kirim, dpdd.waktu_input, mb.barang_hpp
         FROM hd_permintaan_distribusi hpd 
+        LEFT JOIN hd_purchase_order hpo ON hpd.pd_id = hpo.id_permintaan_distribusi
         JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
         JOIN ts_distribusi td ON td.id_permintaan_distribusi = hpd.pd_id 
         JOIN md_barang mb ON dpdd.id_master_barang = mb.barang_id 
         JOIN md_unit mu ON hpd.id_master_unit_tujuan = mu.id 
         JOIN md_users mu2 ON hpd.id_users = mu2.id 
-        WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL
+        WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL AND hpo.id IS NULL
         GROUP BY dpdd.pd_id
         LIMIT ? OFFSET ?
     `, [limit, offset]);
@@ -126,20 +128,22 @@ export const createPurchaseOrder = async (header, details) => {
     try {
         await conn.beginTransaction();
 
+        console.log(header);
+        console.log(details);
+
         const [headerResult] = await conn.query(`
             INSERT INTO hd_purchase_order (
-                tanggal, tanggal_datang, tanggal_entri, id_users,
+                tanggal_datang, tanggal_entri, id_users,
                 ppn, subtotal, id_master_unit_supplier, cetak
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'belum')
+            VALUES (?, ?, ?, ?, ?, ?, 'belum')
         `, [
-            header.tanggal,
             header.tanggal_datang,
             header.tanggal_entri,
             header.id_users,
             header.ppn,
             header.subtotal,
-            header.id_master_unit_supplier
+            header.id_master_unit_tujuan
         ]);
 
         const id_po = headerResult.insertId;

@@ -46,8 +46,8 @@ export const listPurchaseOrders = async (req, res) => {
 export const createPurchaseOrder = async (req, res) => {
     try {
         const id_po = await PurchaseModel.createPurchaseOrder(
-            { ...req.body.header, id_users: req.user.id },
-            req.body.details || []
+            { ...req.body, id_users: req.user.id },
+            req.body.items || []
         );
 
         return sendResponse(res, { id_po }, "Purchase order created", 201);
