@@ -216,3 +216,15 @@ export const savePurchaseOrderPrintPath = async (id, printPath) => {
     );
     return true;
 };
+
+export const confirmPurchaseOrder = async (id) => {
+    await pool.query(
+        `
+        UPDATE hd_purchase_order
+        SET vendor_confirmation_at = NOW()
+        WHERE id = ?
+        `,
+        [id]
+    );
+    return true;
+};

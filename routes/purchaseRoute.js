@@ -6,7 +6,8 @@ import {
   createPurchaseOrder,
   updatePurchaseOrder,
   deletePurchaseOrder,
-  printPurchaseOrder
+  printPurchaseOrder,
+  confirmPurchaseOrder,
 } from "../controllers/purchaseController.js";
 
 const router = express.Router();
@@ -29,5 +30,7 @@ router.put("/:id", verifyToken, updatePurchaseOrder);
 router.delete("/:id", verifyToken, deletePurchaseOrder);
 
 router.post("/:id/print", verifyToken, printPurchaseOrder);
+
+router.post("/:id/confirm", verifyToken, confirmPurchaseOrder);
 
 export default router;

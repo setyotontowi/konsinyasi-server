@@ -160,3 +160,15 @@ export const printPurchaseOrder = async (req, res) => {
         return sendResponse(res, { error: err.message }, "Failed to generate PDF", 500);
     }
 };
+
+export const confirmPurchaseOrder = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        await PurchaseModel.confirmPurchaseOrder(id);
+        
+        return sendResponse(res, { id }, "Purchase order confirmed");
+    } catch (err) {
+        return sendResponse(res, { error: err.message }, "Failed to confirm purchase order", 500);
+    }
+};
