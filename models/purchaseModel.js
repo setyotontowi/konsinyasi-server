@@ -7,16 +7,24 @@ export const listUsedbarang = async ({ page = 1, limit = 20 }) => {
     const offset = (page - 1) * limit;
 
     const [countRows] = await pool.query(`
-        SELECT COUNT(DISTINCT dpdd.pd_id) as total 
+        SELECT mu.nama as nama_unit, mu2.nama, hpd.*, COUNT(dpdd.pdd_id) as jumlah
         FROM hd_permintaan_distribusi hpd 
-        JOIN dt_permintaan_distribusi_detail dpdd ON dpdd.pd_id = hpd.pd_id
+        JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
+        JOIN ts_distribusi td ON td.id_permintaan_distribusi = hpd.pd_id 
+        JOIN md_barang mb ON dpdd.id_master_barang = mb.barang_id 
+        JOIN md_unit mu ON hpd.id_master_unit_tujuan = mu.id 
+        JOIN md_users mu2 ON hpd.id_users = mu2.id 
         WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL
     `);
 
     const [rows] = await pool.query(`
-        SELECT hpd.*, COUNT(dpdd.pdd_id) AS jumlah
-        FROM hd_permintaan_distribusi hpd
-        JOIN dt_permintaan_distribusi_detail dpdd ON dpdd.pd_id = hpd.pd_id
+        SELECT mu.nama as nama_unit, mu2.nama, hpd.*, COUNT(dpdd.pdd_id) as jumlah, td.waktu_kirim, dpdd.waktu_input, mb.barang_hpp
+        FROM hd_permintaan_distribusi hpd 
+        JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
+        JOIN ts_distribusi td ON td.id_permintaan_distribusi = hpd.pd_id 
+        JOIN md_barang mb ON dpdd.id_master_barang = mb.barang_id 
+        JOIN md_unit mu ON hpd.id_master_unit_tujuan = mu.id 
+        JOIN md_users mu2 ON hpd.id_users = mu2.id 
         WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL
         GROUP BY dpdd.pd_id
         LIMIT ? OFFSET ?

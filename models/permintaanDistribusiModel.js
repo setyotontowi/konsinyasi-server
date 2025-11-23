@@ -137,14 +137,20 @@ export const getAllPermintaanDistribusi = async ({
 // --------------------------
 export const getPermintaanDistribusiById = async (id) => {
   const [[header]] = await pool.query(
-    `SELECT * FROM hd_permintaan_distribusi WHERE pd_id = ? AND deleted_at IS NULL`,
+    `SELECT hpd.*, mut.nama as nama_unit_tujuan, mua.nama as nama_unit_asal, mu.nama as nama_user, d.waktu_kirim
+    FROM hd_permintaan_distribusi hpd 
+    JOIN ts_distribusi d ON (d.id_permintaan_distribusi = hpd.pd_id)
+    JOIN md_unit mut ON (hpd.id_master_unit_tujuan = mut.id)
+    JOIN md_unit mua ON (hpd.id_master_unit = mua.id)
+    JOIN md_users mu ON (hpd.id_users = mu.id)
+    WHERE pd_id = ? AND hpd.deleted_at IS NULL`,
     [id]
   );
 
   if (!header) return null;
 
   const [details] = await pool.query(
-    `SELECT pdd.*, b.barang_nama as nama_barang, s.mst_nama as nama_satuan
+    `SELECT pdd.*, b.barang_nama as nama_barang, s.mst_nama as nama_satuan, (pdd.qty_real * b.barang_hpp) as total_harga, b.barang_hpp
       FROM dt_permintaan_distribusi_detail pdd
       JOIN md_barang b ON (pdd.id_master_barang = b.barang_id)
       JOIn md_satuan s ON (pdd.id_master_satuan = s.mst_id)
