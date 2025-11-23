@@ -134,16 +134,17 @@ export const createPurchaseOrder = async (header, details) => {
         const [headerResult] = await conn.query(`
             INSERT INTO hd_purchase_order (
                 tanggal_datang, tanggal_entri, id_users,
-                ppn, subtotal, id_master_unit_supplier, cetak
+                ppn, subtotal, id_master_unit_supplier, cetak, id_permintaan_distribusi
             )
-            VALUES (?, ?, ?, ?, ?, ?, 'belum')
+            VALUES (?, ?, ?, ?, ?, ?, 'belum', ?)
         `, [
             header.tanggal_datang,
             header.tanggal_entri,
             header.id_users,
             header.ppn,
             header.subtotal,
-            header.id_master_unit_tujuan
+            header.id_master_unit_tujuan,
+            header.id_permintaan_distribusi
         ]);
 
         const id_po = headerResult.insertId;
