@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px }
+
+  .header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+  .title { font-size: 18px; font-weight: bold; margin-top: 10px; }
+
+  .section-title {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-size: 13px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+  }
+
+  /* Borderless table (used for UNIT and DATA PASIEN) */
+  .info-table {
+    width: 100%;
+    margin-top: 5px;
+  }
+  .info-table td {
+    padding: 4px 0;
+    vertical-align: top;
+  }
+  .info-label {
+    font-weight: bold;
+    width: 120px;
+    display: inline-block;
+  }
+
+  /* Barang table with borders */
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  .data-table th, .data-table td {
+    border: 1px solid #000;
+    padding: 5px;
+  }
+  .data-table th {
+    background: #eee;
+    text-align: left;
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  /* Two column layout */
+  .flex {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .column {
+    width: 48%;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div><strong>PKU Muhammadiyah Gamping</strong></div>
+  <div>Jl. Wates KM 5,5, Gamping, Sleman, Yogyakarta</div>
+  <div>0274-6499704</div>
+  <div class="title">PURCHASE ORDER</div>
+</div>
+
+<!-- UNIT + PASIEN SECTION -->
+<div class="flex">
+
+  <!-- LEFT: UNIT -->
+  <div class="column">
+    <div class="section-title">UNIT</div>
+    <table class="info-table">
+      <tr><td><span class="info-label">Waktu PO</span>: {{tanggal_entri}}</td></tr>
+      <tr><td><span class="info-label">Waktu Pengiriman</span>: {{tanggal_datang}}</td></tr>
+      <tr><td><span class="info-label">Unit Asal</span>: {{unit_asal}}</td></tr>
+      <tr><td><span class="info-label">Unit Tujuan</span>: {{unit_tujuan}}</td></tr>
+    </table>
+  </div>
+
+  <!-- RIGHT: DATA PASIEN -->
+  <div class="column">
+    <div class="section-title">DATA PASIEN</div>
+    <table class="info-table">
+      <tr><td><span class="info-label">No. RM</span>: {{nomor_rm}}</td></tr>
+      <tr><td><span class="info-label">Nama Pasien</span>: {{nama_pasien}}</td></tr>
+      <tr><td><span class="info-label">Nama Ruang</span>: {{nama_ruang}}</td></tr>
+      <tr><td><span class="info-label">Diagnosa</span>: {{diagnosa}}</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<!-- DETAIL BARANG -->
+<div class="section-title">DETAIL BARANG</div>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Barang</th>
+      <th>Satuan</th>
+      <th>Pemakaian</th>
+      <th>HPP</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{detail_rows}}
+  </tbody>
+</table>
+
+<!-- PRICING -->
+<div class="section-title">SUMMARY</div>
+<div class="right">Subtotal: {{subtotal}}</div>
+<div class="right">PPN ({{ppn}}%): {{ppn_value}}</div>
+<div class="right"><strong>Total: {{total}}</strong></div>
+
+</body>
+</html>

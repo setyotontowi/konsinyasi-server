@@ -3,6 +3,9 @@ import * as PurchaseModel from "../models/purchaseModel.js";
 import fs from "fs-extra";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import pool from "../config/db.js";
+import path from "path";
+import puppeteer from "puppeteer";
+
 
 // --------------------------
 // GET USED ITEMS
@@ -86,15 +89,44 @@ export const deletePurchaseOrder = async (req, res) => {
 // --------------------------
 // PRINT PURCHASE ORDER
 // --------------------------
+function formatDateTime(dt) {
+  if (!dt) return "-";
+  const d = new Date(dt);
+
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+}
+
+
 export const printPurchaseOrder = async (req, res) => {
     try {
         const id = req.params.id;
 
         // 1. Load PO header + detail
-        const [poRows] = await pool.query(
-            `SELECT * FROM hd_purchase_order WHERE id = ?`,
-            [id]
-        );
+        const [poRows] = await pool.query(`
+            SELECT 
+                hpo.*,
+                hpd.nomor_rm,
+                hpd.nama_pasien,
+                hpd.nama_ruang,
+                hpd.diagnosa,
+                mu_asal.nama AS unit_asal,
+                mu_tujuan.nama AS unit_tujuan
+            FROM hd_purchase_order hpo
+            LEFT JOIN hd_permintaan_distribusi hpd
+                ON hpo.id_permintaan_distribusi = hpd.pd_id
+            LEFT JOIN md_unit mu_asal
+                ON hpd.id_master_unit = mu_asal.id
+            LEFT JOIN md_unit mu_tujuan
+                ON hpd.id_master_unit_tujuan = mu_tujuan.id
+            WHERE hpo.id = ?
+        `, [id]);
 
         if (poRows.length === 0)
             return sendResponse(res, {}, "Purchase order not found", 404);
@@ -102,51 +134,75 @@ export const printPurchaseOrder = async (req, res) => {
         const po = poRows[0];
 
         const [detailRows] = await pool.query(
-            `SELECT * FROM dt_purchase_order_detail WHERE id_po = ?`,
+            `SELECT pod.*, b.barang_nama as nama_barang, s.mst_nama as satuan
+            FROM dt_purchase_order_detail pod
+            JOIN md_barang b on pod.id_barang = b.barang_id
+            JOIN md_satuan s on b.id_satuan_kecil = s.mst_id
+            WHERE id_po = ?`,
             [id]
         );
 
-        // 2. Generate PDF
-        const pdf = await PDFDocument.create();
-        const page = pdf.addPage([595, 842]); // A4
-        const font = await pdf.embedFont(StandardFonts.Helvetica);
+        // 1. Load template
+        const templatePath = path.join(process.cwd(), "template/purchase_order.html");
+        let html = await fs.readFile(templatePath, "utf8");
 
-        let y = 800;
+        // Replace placeholders
+        html = html
+        .replace("{{tanggal_entri}}", formatDateTime(po.tanggal_entri))
+        .replace("{{tanggal_datang}}", formatDateTime(po.tanggal_datang))
+        .replace("{{unit_asal}}", po.unit_asal || "-")
+        .replace("{{unit_tujuan}}", po.unit_tujuan || "-")
+        .replace("{{nomor_rm}}", po.nomor_rm || "-")
+        .replace("{{nama_pasien}}", po.nama_pasien || "-")
+        .replace("{{nama_ruang}}", po.nama_ruang || "-")
+        .replace("{{diagnosa}}", po.diagnosa || "-")
+        .replace("{{subtotal}}", po.subtotal)
+        .replace("{{ppn}}", po.ppn)
+        .replace("{{ppn_value}}", (po.subtotal * po.ppn/100))
 
-        page.drawText("PURCHASE ORDER", { x: 50, y, size: 20, font });
-        y -= 30;
-
-        page.drawText(`Tanggal Entri : ${po.tanggal_entri}`, { x: 50, y, size: 12, font });
-        y -= 15;
-        page.drawText(`Tanggal Datang : ${po.tanggal_datang}`, { x: 50, y, size: 12, font });
-        y -= 15;
-        page.drawText(`Subtotal : ${po.subtotal}`, { x: 50, y, size: 12, font });
-        y -= 15;
-        page.drawText(`PPN : ${po.ppn}%`, { x: 50, y, size: 12, font });
-        y -= 15;
-        page.drawText(`Total : ${po.total}`, { x: 50, y, size: 12, font });
-        y -= 30;
-
-        page.drawText("DETAIL BARANG:", { x: 50, y, size: 14, font });
-        y -= 20;
-
+        // Generate HTML table rows
+        let rowHtml = "";
+        let subtotal = 0;
         for (const d of detailRows) {
-            page.drawText(
-                `Barang #${d.id_barang} | Qty: ${d.permintaan} | Harga: ${d.harga_satuan}`,
-                { x: 50, y, size: 12, font }
-            );
-            y -= 15;
-            if (y < 50) break; // simple overflow protection
+            rowHtml += `
+                <tr>
+                <td>${d.nama_barang}</td>
+                <td>${d.satuan}</td>
+                <td>${d.permintaan}</td>
+                <td>${d.harga_satuan}</td>
+                <td>${d.harga_satuan * d.permintaan}</td>
+                </tr>
+            `;
+            subtotal += d.subtotal
         }
 
-        const pdfBytes = await pdf.save();
+        html = html.replace("{{detail_rows}}", rowHtml);
+        html = html.replace("{{subtotal}}", subtotal)
 
-        // 3. Save to disk
+        subtotal = Number(po.subtotal) || 0;
+        const ppn = Number(po.ppn) || 0;
+
+        const ppnCalc = subtotal * (ppn / 100);
+        const total = subtotal + ppnCalc;
+
+        html = html.replace("{{total}}", total);
+
+        // 2. Launch headless chrome
+        const browser = await puppeteer.launch({
+        headless: "new",
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        });
+        const pageObj = await browser.newPage();
+        await pageObj.setContent(html, { waitUntil: "networkidle0" });
+
+        // 3. Save PDF
         const dir = "./uploads/purchase";
         await fs.ensureDir(dir);
 
         const filePath = `${dir}/po-${id}.pdf`;
-        await fs.writeFile(filePath, pdfBytes);
+        await pageObj.pdf({ path: filePath, format: "A4", printBackground: true });
+
+        await browser.close();
 
         const publicPath = `${req.protocol}://${req.get("host")}/uploads/purchase/po-${id}.pdf`;
 
