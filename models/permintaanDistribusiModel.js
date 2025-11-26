@@ -319,17 +319,25 @@ export const deletePermintaanDistribusiDetail = async (pdd_id) => {
 // --------------------------
 // Soft delete detail item
 // --------------------------
-export const pemakaianBarang = async (data) => {
+export const pemakaianBarang = async (pd_id, data) => {
   const conn = await pool.getConnection();
   try{
     await conn.beginTransaction()
-    const { pd_id, ...fieldsToUpdate } = data;
+    const { fieldsToUpdate } = data;
+    const { id } = pd_id
 
     const fields = [];
     const values = [];
 
 
     const items = data.items
+
+    await conn.query(
+      `UPDATE hd_permintaan_distribusi 
+       SET sudah_dipakai = 1
+       WHERE pd_id = ?`, 
+       [id]
+    );
 
     for (const item of items){
       console.log(item);
@@ -348,7 +356,7 @@ export const pemakaianBarang = async (data) => {
       item.id_master_unit = data.id_master_unit
 
       // Insert into journal
-      insertNewTransaction(conn, item)
+      await insertNewTransaction(conn, item)
       
     }
 

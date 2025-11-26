@@ -177,8 +177,6 @@ export const insertNewTransaction = async (conn, data) => {
     id_master_unit
   };
 
-  console.log
-
   await insertRecord(conn, cleanRecord);
 };
 

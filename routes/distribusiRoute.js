@@ -26,7 +26,7 @@ router.put("/permintaan/:id", verifyToken, Controller.updatePermintaanDistribusi
 router.delete("/permintaan/:id", verifyToken, Controller.deletePermintaanDistribusi);
 
 // ✅ Edit one detail item (qty or qty_real)
-router.put("/pemakaian", verifyToken, Controller.pemakaianBarang);
+router.put("/pemakaian/:id", verifyToken, Controller.pemakaianBarang);
 
 // ✅ Edit one detail item (qty or qty_real)
 router.put("/permintaan/detail/:id", verifyToken, Controller.editPermintaanDistribusiDetail);

@@ -166,10 +166,11 @@ export const pemakaianBarang = async (req, res) => {
   try {
     const data = { ...req.body };
 
+    const id = req.params
     data.id_users = req.user.id
     data.id_master_unit = req.user.id_master_unit
 
-    const updated = await PermintaanModel.pemakaianBarang(data);
+    const updated = await PermintaanModel.pemakaianBarang(id, data);
     if (!updated) {
       return sendResponse(res, {}, "Data not found or not updated", 404);
     }
@@ -177,6 +178,6 @@ export const pemakaianBarang = async (req, res) => {
     return sendResponse(res, {}, "Permintaan distribusi updated successfully");
   } catch (error) {
     console.error("Error updating permintaan:", error);
-    return sendResponse(res, {}, "Internal Server Error", 500);
+    return sendResponse(res, {}, error.message, 500);
   }
 };
