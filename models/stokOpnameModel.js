@@ -177,13 +177,15 @@ export const getAllStokOpname = async ({
   const params = [];
 
   // 🔹 Restrict non-admin users
-  if (user.role !== 1 && user.id_master_unit) {
+  // 1 is administrator
+  if (user.role !== 1 && user.unit) {
     where += " AND hd.id_master_unit = ?";
-    params.push(user.id_master_unit);
+    params.push(user.unit);
   } else if (user.role == 1 && filters.id_master_unit) {
     where += " AND hd.id_master_unit = ?";
     params.push(filters.id_master_unit);
-  }
+  } 
+
 
   // 🔹 Additional filters
   if (filters.start && filters.end) {

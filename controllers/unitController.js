@@ -31,7 +31,9 @@ export const getAllUnit = async (req, res) => {
         is_pbf: req.query.is_pbf || undefined
     };
 
-    const { rows, total } = await listAllUnit({ page, limit, filters });
+    const user = req.user;
+
+    const { rows, total } = await listAllUnit({ page, limit, filters, user });
     sendPaginatedResponse(res, rows, page, limit, total);
     
   } catch (err) {

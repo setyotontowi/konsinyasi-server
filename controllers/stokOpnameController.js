@@ -2,6 +2,10 @@
 import { createStokOpname, getAllStokOpname, getStokOpnameById, updateStokOpname } from "../models/stokOpnameModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 
+
+const GROUP_VENDOR = 3;
+
+
 export const createStokOpnameController = async (req, res) => {
   try {
     const id_users = req.user?.id || req.body.id_users; // if using auth middleware, fallback to body
@@ -36,13 +40,17 @@ export const getStokOpname = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
 
-    const filters = {
+    let filters = {
       start: req.query.start_date,
       end: req.query.end_date,
       id_master_unit: req.query.id_master_unit,
     };
 
     const user = req.user || {}; // assuming middleware sets this
+
+    if (req.user && req.user.role === GROUP_VENDOR) {
+      filters = { ...filters, id_master_unit: req.user.unit };
+    }
 
     const { data, pagination } = await getAllStokOpname({
       page,

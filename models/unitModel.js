@@ -19,7 +19,7 @@ export const getUnitById = async (id) => {
   return rows[0]; // return single user
 };
 
-export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) => {
+export const listAllUnit = async ({ page = 1, limit = 20, filters = {}, user = {} } = {}) => {
     const offset = (page - 1) * limit;
 
     // build WHERE clauses dynamically
@@ -28,9 +28,14 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {} } = {}) =
 
     whereClauses.push('1=1');
 
+    if (user.role !== 1){
+        whereClauses.push('un.id = ?');
+        params.push(`${user.unit}`);
+    }
+
     if (filters.id) {
         whereClauses.push('un.id = ?');
-        params.push(`%${filters.id}%`);
+        params.push(`${filters.id}`);
     }
 
     if (filters.nama) {
