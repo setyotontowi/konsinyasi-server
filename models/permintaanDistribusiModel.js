@@ -139,7 +139,7 @@ export const getPermintaanDistribusiById = async (id) => {
   const [[header]] = await pool.query(
     `SELECT hpd.*, mut.nama as nama_unit_tujuan, mua.nama as nama_unit_asal, mu.nama as nama_user, d.waktu_kirim
     FROM hd_permintaan_distribusi hpd 
-    JOIN ts_distribusi d ON (d.id_permintaan_distribusi = hpd.pd_id)
+    LEFT JOIN ts_distribusi d ON (d.id_permintaan_distribusi = hpd.pd_id)
     JOIN md_unit mut ON (hpd.id_master_unit_tujuan = mut.id)
     JOIN md_unit mua ON (hpd.id_master_unit = mua.id)
     JOIN md_users mu ON (hpd.id_users = mu.id)
