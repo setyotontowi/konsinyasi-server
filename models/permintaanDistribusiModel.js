@@ -16,7 +16,7 @@ export const createPermintaanDistribusi = async (data, user) => {
       `INSERT INTO hd_permintaan_distribusi 
        (id_master_unit, id_master_unit_tujuan, id_users, nomor_rm, nama_pasien, nama_ruang, diagnosa, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [id_master_unit, id_master_unit_tujuan, user.id, nama_ruang, nomor_rm, nama_pasien, diagnosa]
+      [id_master_unit, id_master_unit_tujuan, user.id, nomor_rm, nama_pasien, nama_ruang, diagnosa]
     );
 
     const pd_id = headerResult.insertId;
