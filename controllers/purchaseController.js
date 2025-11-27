@@ -5,6 +5,7 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import pool from "../config/db.js";
 import path from "path";
 import puppeteer from "puppeteer";
+import { GROUP_VENDOR } from "../helpers/utilHelper.js";
 
 
 // --------------------------
@@ -32,7 +33,14 @@ export const listPurchaseOrders = async (req, res) => {
         const limit = +req.query.limit || 20;
 
         const { page: _p, limit: _l, ...filters } = req.query;
-        const parsedFilters = Object.keys(filters).length ? filters : null;
+        let parsedFilters = Object.keys(filters).length ? filters : null;
+
+        if (req.user && req.user.role === GROUP_VENDOR) {
+            parsedFilters = {...parsedFilters, id_master_unit_supplier:req.user.unit}
+        }
+
+        console.log(req.user)
+        console.log(parsedFilters)
 
         const { rows, total } = await PurchaseModel.listPurchaseOrders({
             page,

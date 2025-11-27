@@ -1,9 +1,7 @@
 // controllers/stokOpnameController.js
 import { createStokOpname, getAllStokOpname, getStokOpnameById, updateStokOpname } from "../models/stokOpnameModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
-
-
-const GROUP_VENDOR = 3;
+import { GROUP_VENDOR } from "../helpers/utilHelper.js";
 
 
 export const createStokOpnameController = async (req, res) => {

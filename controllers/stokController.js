@@ -1,7 +1,6 @@
 import { getAllHistoryStok, getStokLive } from "../models/stokModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
-
-const GROUP_VENDOR = 3;
+import { GROUP_VENDOR } from "../helpers/utilHelper.js";
 
 export const getHistoryStok = async (req, res) => {
   try {

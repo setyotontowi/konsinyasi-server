@@ -9,3 +9,5 @@ export const toNumber = (v) => {
   const num = parseFloat(v);
   return isNaN(num) ? 0 : num;
 };
+
+export const GROUP_VENDOR = 3;

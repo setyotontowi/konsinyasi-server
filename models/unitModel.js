@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { GROUP_VENDOR } from "../helpers/utilHelper.js";
 
 export const insertUnit = async (userData) => {
   const { nama, keterangan, is_pbf } = userData;
@@ -28,7 +29,7 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {}, user = {
 
     whereClauses.push('1=1');
 
-    if (user.role !== 1){
+    if (user.role === GROUP_VENDOR){
         whereClauses.push('un.id = ?');
         params.push(`${user.unit}`);
     }
