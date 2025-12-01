@@ -7,7 +7,7 @@ export const listUsedbarang = async ({ page = 1, limit = 20 }) => {
     const offset = (page - 1) * limit;
 
     const [countRows] = await pool.query(`
-        SELECT mu.nama as nama_unit, mu2.nama, hpd.*, COUNT(dpdd.pdd_id) as jumlah
+        SELECT COUNT(DISTINCT hpd.pd_id) AS total
         FROM hd_permintaan_distribusi hpd 
         LEFT JOIN hd_purchase_order hpo ON hpd.pd_id = hpo.id_permintaan_distribusi
         JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
