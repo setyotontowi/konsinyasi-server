@@ -70,6 +70,8 @@ export const insertRecord = async (conn, data) => {
     id_master_unit,
   } = data;
 
+  console.log("Insert record", data)
+
   // Prepare dynamic columns
   let id_stok_opname_detail = null;
   let id_penerimaan_distribusi = null;
@@ -118,6 +120,8 @@ export const insertNewTransaction = async (conn, data) => {
     id_master_unit
   } = data;
 
+  console.log("Insert new transaction", data)
+
   // Get candidate stok (FIFO: earliest ED)
   const rows = await conn.query(
     `SELECT * FROM ch_stok_live 
@@ -136,6 +140,24 @@ export const insertNewTransaction = async (conn, data) => {
 
   let stokData = { ...datacandidate }; // clone to avoid mutation bugs
 
+
+  stokData = {
+    ...stokData,
+    id_barang: id_master_barang,
+    id_users,
+    id_unit: id_master_unit,
+    masuk,
+    keluar,
+    stok_sebelum: datacandidate.sisa, 
+    stok_sesudah: datacandidate.sisa + masuk - keluar
+  };
+
+  if (tipe === "pemakaian") {
+    stokData.transaksi = "pemakaian";
+    stokData.id_penerimaan_distribusi = id;
+  }
+
+
   // If invalid, recalc stok
   if (!stokData.is_valid) {
     const stokReal = await calculateStok({
@@ -144,21 +166,8 @@ export const insertNewTransaction = async (conn, data) => {
       nobatch: stokData.nobatch
     });
 
-    stokData = {
-      ...stokData,
-      id_barang: id_master_barang,
-      id_users,
-      id_unit: id_master_unit,
-      stok_sebelum: stokReal.sisa,
-      masuk,
-      keluar,
-      stok_sesudah: stokReal.sisa + masuk - keluar
-    };
-
-    if (tipe === "pemakaian") {
-      stokData.transaksi = "pemakaian";
-      stokData.id_penerimaan_distribusi = id;
-    }
+    stokData.stok_sebelum = stokReal.sisa
+    stokData.stok_sesudah = stokReal.sisa + masuk - keluar
   }
 
   // Sanitize data so insertRecord gets ONLY required fields.

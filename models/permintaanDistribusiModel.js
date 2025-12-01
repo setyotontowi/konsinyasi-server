@@ -340,7 +340,6 @@ export const pemakaianBarang = async (pd_id, data) => {
     );
 
     for (const item of items){
-      console.log(item);
       await conn.query(
         `UPDATE dt_permintaan_distribusi_detail 
          SET qty_real = ?
@@ -351,9 +350,11 @@ export const pemakaianBarang = async (pd_id, data) => {
       item.tipe = "pemakaian"
       item.id = item.pdd_id
       item.masuk = 0
-      item.keluar = item.qty_real
+      item.keluar = item.qty_real // Apakah ini terkirim?
       item.id_users = data.id_users
       item.id_master_unit = data.id_master_unit
+
+      console.log(item);
 
       // Insert into journal
       await insertNewTransaction(conn, item)
