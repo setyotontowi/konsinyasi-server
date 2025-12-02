@@ -326,7 +326,7 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
   const offset = (page - 1) * limit;
 
   // Extract filters
-  const { id_barang, ed, nobatch, unit } = filters;
+  const { id_barang, ed, nobatch, unit, search } = filters;
 
   // Build dynamic WHERE clause
   let where = "WHERE 1=1";
@@ -351,6 +351,13 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
     where += " AND md_barang.id_pabrik = ?";
     params.push(unit);
   }
+
+  if (search) {
+    where += " AND md_barang.barang_nama LIKE ?";
+    params.push(`%${search}%`);
+  }
+
+  console.log(where, params)
 
   // Count with filter
   const [countRows] = await pool.query(

@@ -74,10 +74,18 @@ export const getAllPermintaanDistribusi = async ({
     params.push(filters.id_master_unit);
   }
 
-  // 🔹 Additional filters
-  if (filters.start && filters.end) {
+  if (filters.start_date && filters.end_date) {
+    // BOTH start and end exist
     where += " AND hd.waktu BETWEEN ? AND ?";
-    params.push(filters.start, filters.end);
+    params.push(filters.start_date, filters.end_date);
+  } else if (filters.start_date) {
+    // ONLY start date → everything from start onward
+    where += " AND hd.waktu >= ?";
+    params.push(filters.start_date);
+  } else if (filters.end_date) {
+    // ONLY end date → everything up to end
+    where += " AND hd.waktu <= ?";
+    params.push(filters.end_date);
   }
 
   if (filters.id_master_unit_tujuan) {

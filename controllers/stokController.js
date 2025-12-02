@@ -50,10 +50,15 @@ export const getAllStok = async (req, res) => {
     // If user group is vendor, then add unit into the filter. So the vendor can only see their items
 
     let filters = req.query || {};
+    let search = req.query.search || "";
+    filters = { ...filters, search }
 
     if (req.user && req.user.role === GROUP_VENDOR) {
       filters = { ...filters, unit: req.user.unit };
     }
+
+
+    console.log(filters)
 
     const { data, pagination } = await getStokLive({ page, limit, filters: filters });
 
