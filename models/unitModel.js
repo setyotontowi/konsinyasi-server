@@ -30,7 +30,7 @@ export const listAllUnit = async ({ page = 1, limit = 20, filters = {}, user = {
     whereClauses.push('1=1');
 
     if (user.role === GROUP_VENDOR){
-        whereClauses.push('un.id = ?');
+        whereClauses.push('un.id = ? OR is_pbf = "Tidak"');
         params.push(`${user.unit}`);
     }
 

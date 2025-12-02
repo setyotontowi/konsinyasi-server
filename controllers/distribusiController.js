@@ -20,7 +20,7 @@ export const getAllDistribusi = async (req, res) => {
 
     // 🔒 Restrict by unit if not admin
     if (req.user.role !== 1) {
-      filters.id_master_unit = req.user.unit;
+      filters.id_master_unit_tujuan = req.user.unit;
     }
 
     const allItems = await DistribusiModel.getAllDistribusi(filters);

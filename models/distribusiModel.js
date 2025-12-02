@@ -37,6 +37,7 @@ export const getAllDistribusi = async (filters = {}) => {
   }
 
   const whereQuery = `WHERE ${whereClauses.join(" AND ")}`;
+  
 
   const [rows] = await pool.query(
     `SELECT d.*, un.nama as nama_unit, u.nama as nama_user, ut.nama as nama_unit_tujuan

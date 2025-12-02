@@ -60,15 +60,13 @@ export const getAllPermintaanDistribusi = async ({
 } = {}) => {
   const offset = (page - 1) * limit;
 
-  console.log(filters, user.role);
-
   let where = "WHERE hd.deleted_at IS NULL";
   const params = [];
 
   // 🔹 Restrict non-admin users
-  if (user.role !== 1 && user.id_master_unit) {
-    where += " AND hd.id_master_unit = ?";
-    params.push(user.id_master_unit);
+  if (user.role !== 1 && filters.id_master_unit) {
+    where += " AND hd.id_master_unit_tujuan = ?";
+    params.push(filters.id_master_unit);
   } else if (user.role == 1 && filters.id_master_unit) {
     where += " AND hd.id_master_unit = ?";
     params.push(filters.id_master_unit);
@@ -98,15 +96,12 @@ export const getAllPermintaanDistribusi = async ({
     params.push(`%${filters.search}%`, `%${filters.search}%`);
   }
 
-  console.log("Permintaan", filters.permintaanDistribusi)
   if (filters.permintaanDistribusi === 1) {
     where += " AND d.id IS NULL"; 
   } else if (filters.permintaanDistribusi == 0) {
     where += " AND d.id IS NOT NULL";
   }
 
-  console.log("where", where);
-  
   const [rows] = await pool.query(
     `SELECT hd.*, ua.nama as unit_asal, ut.nama as unit_tujuan,
     CASE 
