@@ -149,12 +149,12 @@ import { calculateStok } from "../models/stokModel.js";
 
 export const checkStock = async (req, res) => {
   try {
-    const { barang, nobatch, ed } = req.body;
+    const { barang, ed, nobatch } = req.query;
 
     if (!barang || !nobatch || !ed) {
       return res.status(400).json({
         success: false,
-        message: "barang, nobatch, dan ed wajib diisi",
+        message: "barang, ed, dan nobatch wajib diisi",
       });
     }
 
