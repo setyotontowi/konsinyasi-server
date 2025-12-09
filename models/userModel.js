@@ -11,11 +11,11 @@ export const findByUsername = async (username) => {
 };
 
 export const createUser = async (userData) => {
-  const { username, password, nama, status_active = 1, id_users_group, id_master_unit, keterangan } = userData;
+  const { username, password, nama, status_active = 1, id_users_group, id_master_unit, keterangan, users_id_simrs } = userData;
   const [result] = await pool.query(
-    `INSERT INTO md_users (username, password, nama, status_active, id_users_group, id_master_unit, keterangan)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [username, password, nama, status_active, id_users_group, id_master_unit, keterangan]
+    `INSERT INTO md_users (username, password, nama, status_active, id_users_group, id_master_unit, keterangan, users_id_simrs)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [username, password, nama, status_active, id_users_group, id_master_unit, keterangan, users_id_simrs]
   );
   return result.insertId;
 };
@@ -57,7 +57,7 @@ export const listAllUsers = async ({ page = 1, limit = 20, filters = {} } = {}) 
 
   // get paginated rows
   const [rows] = await pool.query(
-    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama, un.nama as nama_unit, u.keterangan, u.id_master_unit
+    `SELECT u.id, u.username, u.nama, u.nip, u.status_active, u.id_users_group, g.group_nama, un.nama as nama_unit, u.keterangan, u.id_master_unit, u.users_id_simrs
      FROM md_users u
      LEFT JOIN md_users_group g ON u.id_users_group = g.id
      LEFT JOIN md_unit un ON u.id_master_unit = un.id

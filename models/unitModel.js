@@ -2,11 +2,11 @@ import pool from "../config/db.js";
 import { GROUP_VENDOR } from "../helpers/utilHelper.js";
 
 export const insertUnit = async (userData) => {
-  const { nama, keterangan, is_pbf } = userData;
+  const { nama, keterangan, is_pbf, unit_id_simrs } = userData;
   const [result] = await pool.query(
-    `INSERT INTO md_unit (nama, keterangan, is_pbf)
-     VALUES (?, ?, ?)`,
-    [nama, keterangan, is_pbf]
+    `INSERT INTO md_unit (nama, keterangan, is_pbf, unit_id_simrs)
+     VALUES (?, ?, ?, ?)`,
+    [nama, keterangan, is_pbf, unit_id_simrs]
   );
   return result.insertId;
 };

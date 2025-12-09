@@ -9,7 +9,8 @@ export const createUnit = async (req, res) => {
     const unitId = await insertUnit({
       nama,
       keterangan,
-      is_pbf
+      is_pbf,
+      unit_id_simrs
     });
 
     sendResponse(res, unitId, 'Unit created successfully');    
@@ -67,7 +68,7 @@ export const updateUnit = async (req, res) => {
       return sendResponse(res, {}, 'Unit ID is required', 400);
     }
 
-    const allowedFields = ['nama', 'keterangan', 'is_pbf', 'is_active'];
+    const allowedFields = ['nama', 'keterangan', 'is_pbf', 'is_active', 'unit_id_simrs'];
     
     // Filter request body to only allowed fields
     const updateData = {};

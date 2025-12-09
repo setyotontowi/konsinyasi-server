@@ -6,7 +6,7 @@ dotenv.config();
 
 
 export const register = async (req, res) => {
-  const { username, password, nama, id_users_group, id_master_unit, keterangan } = req.body;
+  const { username, password, nama, id_users_group, id_master_unit, keterangan, users_id_simrs } = req.body;
 
   try {
     // check if username already exists
@@ -26,7 +26,8 @@ export const register = async (req, res) => {
       nama,
       id_users_group,
       id_master_unit: id_master_unit,
-      keterangan: keterangan
+      keterangan: keterangan,
+      users_id_simrs: users_id_simrs
     });
 
     res.status(201).json({

@@ -42,7 +42,7 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
 
-    const allowedFields = ['username', 'nama', 'nip', 'password', 'status_active', 'keterangan', 'id_master_unit', 'id_users_group'];
+    const allowedFields = ['username', 'nama', 'nip', 'password', 'status_active', 'keterangan', 'id_master_unit', 'id_users_group', 'users_id_simrs'];
     
     // Filter request body to only allowed fields
     const updateData = {};
