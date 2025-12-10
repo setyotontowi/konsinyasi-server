@@ -34,6 +34,7 @@ coverage/
 # Optional: if you use Docker
 docker-compose.override.yml
 .env.local
+.env.dev
 
 # Uploaded files (PDF, images, etc)
 uploads/

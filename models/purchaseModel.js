@@ -75,7 +75,9 @@ export const listUsedBarangBulk = async (id_unit) => {
         nama_barang, 
         SUM(qty) AS qty,
         MIN(waktu_kirim) AS waktu_from,
-        MAX(waktu_kirim) AS waktu_to
+        MAX(waktu_kirim) AS waktu_to,
+        nama_satuan,
+        barang_hpp
       FROM (
         SELECT 
           dpdd.pdd_id,
@@ -85,7 +87,8 @@ export const listUsedBarangBulk = async (id_unit) => {
           dpdd.qty_real AS qty,
           mb.barang_hpp AS barang_hpp,
           td.waktu_kirim,
-          hpd.id_master_unit_tujuan AS id_pbf
+          hpd.id_master_unit_tujuan AS id_pbf,
+          ms.mst_nama AS nama_satuan
         FROM dt_permintaan_distribusi_detail dpdd
         JOIN hd_permintaan_distribusi hpd 
             ON hpd.pd_id = dpdd.pd_id
@@ -93,9 +96,12 @@ export const listUsedBarangBulk = async (id_unit) => {
             ON td.id_permintaan_distribusi = hpd.pd_id
         JOIN md_barang mb 
             ON dpdd.id_master_barang = mb.barang_id
+        JOIN md_satuan ms 
+            ON mb.id_satuan_kecil = ms.mst_id
+        JOIN md_unit mu
+            ON hpd.id_master_unit_tujuan = mu.id
         LEFT JOIN dt_purchase_order_detail dpo
             ON dpo.id_permintaan_distribusi = hpd.pd_id
-            
         WHERE dpdd.qty_real IS NOT NULL
           AND hpd.deleted_at IS NULL
           AND hpd.id_master_unit_tujuan = ?
