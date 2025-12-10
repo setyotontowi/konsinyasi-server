@@ -62,55 +62,75 @@ export const listUsedbarang = async ({ page = 1, limit = 20 }) => {
 //  USED ITEMS LIST BULK
 // ----------------------
 
-export const listUsedBarangBulk = async(id_unit) => {
+export const listUsedBarangBulk = async (id_unit) => {
   try {
-
     if (!id_unit) {
-      return res.status(400).json({ message: "id_unit (PBF) is required" });
+      throw new Error("id_unit (PBF) is required");
     }
 
+    // 1) Fetch grouped result
     const [rows] = await pool.query(
       `
-      SELECT nama_barang, SUM(qty) as qty FROM (SELECT dpdd.pdd_id,
-        dpdd.pd_id,
-        dpdd.id_master_barang,
-        mb.barang_nama AS nama_barang,
-        dpdd.qty_real AS qty,
-        mb.barang_hpp AS barang_hpp,
-        td.waktu_kirim,
-        hpd.id_master_unit_tujuan AS id_pbf,
-        mu.nama AS nama_unit_pbf
-    FROM dt_permintaan_distribusi_detail dpdd
-    JOIN hd_permintaan_distribusi hpd 
-        ON hpd.pd_id = dpdd.pd_id
-    JOIN ts_distribusi td
-        ON td.id_permintaan_distribusi = hpd.pd_id
-    JOIN md_barang mb 
-        ON dpdd.id_master_barang = mb.barang_id
-    JOIN md_unit mu
-        ON hpd.id_master_unit_tujuan = mu.id
-    LEFT JOIN dt_purchase_order_detail dpo
-        ON dpo.id_permintaan_distribusi = hpd.pd_id
-    WHERE dpdd.qty_real IS NOT NULL
-        AND hpd.deleted_at IS NULL
-        AND hpd.id_master_unit_tujuan = ?
-        AND dpo.id IS NULL   -- exclude PD already in PO
-    ORDER BY dpdd.pdd_id DESC) tbl
-    GROUP BY tbl.id_master_barang 
+      SELECT 
+        nama_barang, 
+        SUM(qty) AS qty,
+        MIN(waktu_kirim) AS waktu_from,
+        MAX(waktu_kirim) AS waktu_to
+      FROM (
+        SELECT 
+          dpdd.pdd_id,
+          dpdd.pd_id,
+          dpdd.id_master_barang,
+          mb.barang_nama AS nama_barang,
+          dpdd.qty_real AS qty,
+          mb.barang_hpp AS barang_hpp,
+          td.waktu_kirim,
+          hpd.id_master_unit_tujuan AS id_pbf
+        FROM dt_permintaan_distribusi_detail dpdd
+        JOIN hd_permintaan_distribusi hpd 
+            ON hpd.pd_id = dpdd.pd_id
+        JOIN ts_distribusi td
+            ON td.id_permintaan_distribusi = hpd.pd_id
+        JOIN md_barang mb 
+            ON dpdd.id_master_barang = mb.barang_id
+        LEFT JOIN dt_purchase_order_detail dpo
+            ON dpo.id_permintaan_distribusi = hpd.pd_id
+            
+        WHERE dpdd.qty_real IS NOT NULL
+          AND hpd.deleted_at IS NULL
+          AND hpd.id_master_unit_tujuan = ?
+          AND dpo.id IS NULL
+      ) AS tbl
+      GROUP BY id_master_barang
       `,
       [id_unit]
     );
 
-    return({
+    // 2) Compute global min & max in JS
+    let min_time = null;
+    let max_time = null;
+
+    for (const row of rows) {
+      const from = new Date(row.waktu_from);
+      const to = new Date(row.waktu_to);
+
+      if (!min_time || from < min_time) min_time = from;
+      if (!max_time || to > max_time) max_time = to;
+    }
+
+    return {
       success: true,
-      rows: rows,
-    });
+      rows,
+      min_time,
+      max_time,
+    };
 
   } catch (err) {
-    console.error("ERROR /get_list_purchased:", err);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("ERROR listUsedBarangBulk:", err);
+    throw err;
   }
 };
+
 
 
 

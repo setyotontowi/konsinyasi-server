@@ -31,9 +31,9 @@ export const getUsedItemsBulk = async (req, res) => {
     try {
         const id_unit = +req.query.id_unit || null;
 
-        const { rows } = await PurchaseModel.listUsedBarangBulk(id_unit);
+        const { rows, min_time, max_time } = await PurchaseModel.listUsedBarangBulk(id_unit);
 
-        return sendResponse(res, { rows }, "Used items loaded");
+        return sendResponse(res, { rows, min_time, max_time }, "Used items loaded");
     } catch (err) {
         return sendResponse(res, { error: err.message }, "Failed to load used items", 500);
     }
