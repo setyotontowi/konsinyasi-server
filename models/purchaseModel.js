@@ -9,27 +9,50 @@ export const listUsedbarang = async ({ page = 1, limit = 20 }) => {
     const [countRows] = await pool.query(`
         SELECT COUNT(DISTINCT hpd.pd_id) AS total
         FROM hd_permintaan_distribusi hpd 
-        LEFT JOIN hd_purchase_order hpo ON hpd.pd_id = hpo.id_permintaan_distribusi
-        JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
-        JOIN ts_distribusi td ON td.id_permintaan_distribusi = hpd.pd_id 
-        JOIN md_barang mb ON dpdd.id_master_barang = mb.barang_id 
-        JOIN md_unit mu ON hpd.id_master_unit_tujuan = mu.id 
-        JOIN md_users mu2 ON hpd.id_users = mu2.id 
-        WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL AND hpo.id IS NULL
+        LEFT JOIN dt_purchase_order_detail dpo 
+            ON dpo.id_permintaan_distribusi = hpd.pd_id
+        JOIN dt_permintaan_distribusi_detail dpdd 
+            ON dpdd.pd_id = hpd.pd_id
+        JOIN ts_distribusi td 
+            ON td.id_permintaan_distribusi = hpd.pd_id 
+        JOIN md_barang mb 
+            ON dpdd.id_master_barang = mb.barang_id 
+        JOIN md_unit mu 
+            ON hpd.id_master_unit_tujuan = mu.id 
+        JOIN md_users mu2 
+            ON hpd.id_users = mu2.id 
+        WHERE dpdd.qty_real IS NOT NULL
+        AND hpd.deleted_at IS NULL
+        AND dpo.id IS NULL;
     `);
 
     const [rows] = await pool.query(`
-        SELECT mu.nama as nama_unit, mu2.nama, hpd.*, COUNT(dpdd.pdd_id) as jumlah, td.waktu_kirim, dpdd.waktu_input, mb.barang_hpp
+        SELECT 
+            mu.nama AS nama_unit, 
+            mu2.nama, 
+            hpd.*, 
+            COUNT(dpdd.pdd_id) AS jumlah, 
+            td.waktu_kirim,  
+            dpdd.waktu_input,
+            mb.barang_hpp
         FROM hd_permintaan_distribusi hpd 
-        LEFT JOIN hd_purchase_order hpo ON hpd.pd_id = hpo.id_permintaan_distribusi
-        JOIN dt_permintaan_distribusi_detail dpdd ON (dpdd.pd_id = hpd.pd_id)
-        JOIN ts_distribusi td ON td.id_permintaan_distribusi = hpd.pd_id 
-        JOIN md_barang mb ON dpdd.id_master_barang = mb.barang_id 
-        JOIN md_unit mu ON hpd.id_master_unit_tujuan = mu.id 
-        JOIN md_users mu2 ON hpd.id_users = mu2.id 
-        WHERE qty_real IS NOT NULL AND hpd.deleted_at IS NULL AND hpo.id IS NULL
+        LEFT JOIN dt_purchase_order_detail dpo 
+            ON dpo.id_permintaan_distribusi = hpd.pd_id
+        JOIN dt_permintaan_distribusi_detail dpdd 
+            ON dpdd.pd_id = hpd.pd_id
+        JOIN ts_distribusi td 
+            ON td.id_permintaan_distribusi = hpd.pd_id 
+        JOIN md_barang mb 
+            ON dpdd.id_master_barang = mb.barang_id 
+        JOIN md_unit mu 
+            ON hpd.id_master_unit_tujuan = mu.id 
+        JOIN md_users mu2 
+            ON hpd.id_users = mu2.id 
+        WHERE dpdd.qty_real IS NOT NULL
+        AND hpd.deleted_at IS NULL
+        AND dpo.id IS NULL
         GROUP BY dpdd.pd_id
-        LIMIT ? OFFSET ?
+        LIMIT ? OFFSET ?;
     `, [limit, offset]);
 
     return { rows, total: countRows[0].total };
