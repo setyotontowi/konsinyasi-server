@@ -87,6 +87,21 @@ export const createPurchaseOrder = async (req, res) => {
 };
 
 // --------------------------
+// CREATE PURCHASE ORDER BULK
+// --------------------------
+export const createPurchaseOrderBulk = async (req, res) => {
+    try {
+        const id_po = await PurchaseModel.createPurchaseOrderBulk(
+            { ...req.body, id_users: req.user.id }
+        );
+
+        return sendResponse(res, { id_po }, "Purchase order created", 201);
+    } catch (err) {
+        return sendResponse(res, { error: err.message }, "Failed to create purchase order", 500);
+    }
+};
+
+// --------------------------
 // UPDATE HEADER
 // --------------------------
 export const updatePurchaseOrder = async (req, res) => {

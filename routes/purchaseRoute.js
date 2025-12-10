@@ -5,6 +5,7 @@ import {
   getUsedItemsBulk,
   listPurchaseOrders,
   createPurchaseOrder,
+  createPurchaseOrderBulk,
   updatePurchaseOrder,
   deletePurchaseOrder,
   printPurchaseOrder,
@@ -25,6 +26,9 @@ router.get("/", verifyToken, listPurchaseOrders);
 
 // create purchase order
 router.post("/", verifyToken, createPurchaseOrder);
+
+// create purchase order
+router.post("/bulk", verifyToken, createPurchaseOrderBulk);
 
 // update header only
 router.put("/:id", verifyToken, updatePurchaseOrder);

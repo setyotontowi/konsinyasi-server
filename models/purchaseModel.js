@@ -232,9 +232,6 @@ export const createPurchaseOrder = async (header, details) => {
     try {
         await conn.beginTransaction();
 
-        console.log(header);
-        console.log(details);
-
         const [headerResult] = await conn.query(`
             INSERT INTO hd_purchase_order (
                 tanggal_datang, tanggal_entri, id_users,
@@ -264,6 +261,90 @@ export const createPurchaseOrder = async (header, details) => {
                 d.permintaan,
                 d.harga_satuan,
                 d.id_permintaan_pemesanan_detail
+            ]);
+        }
+
+        await conn.commit();
+        return id_po;
+
+    } catch (err) {
+        await conn.rollback();
+        throw err;
+    } finally {
+        conn.release();
+    }
+};
+
+export const createPurchaseOrderBulk = async (header) => {
+    const conn = await pool.getConnection();
+    try {
+        await conn.beginTransaction();
+
+        const [headerResult] = await conn.query(`
+            INSERT INTO hd_purchase_order (
+                tanggal_datang, tanggal_entri, id_users,
+                ppn, subtotal, id_master_unit_supplier, cetak, id_permintaan_distribusi
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 'belum', ?)
+        `, [
+            header.tanggal,
+            header.tanggal,
+            header.id_users,
+            header.ppn,
+            header.subtotal,
+            header.id_unit,
+            0
+        ]);
+
+        const id_po = headerResult.insertId;
+
+        // Get Details from id_unit
+        const [details] = await pool.query(
+        `
+            SELECT 
+            dpdd.pdd_id,
+            dpdd.pd_id,
+            dpdd.id_master_barang as id_barang,
+            mb.barang_nama AS nama_barang,
+            dpdd.qty_real AS qty,
+            mb.barang_hpp AS barang_hpp,
+            td.waktu_kirim,
+            hpd.id_master_unit_tujuan AS id_pbf,
+            ms.mst_nama AS nama_satuan
+            FROM dt_permintaan_distribusi_detail dpdd
+            JOIN hd_permintaan_distribusi hpd 
+                ON hpd.pd_id = dpdd.pd_id
+            JOIN ts_distribusi td
+                ON td.id_permintaan_distribusi = hpd.pd_id
+            JOIN md_barang mb 
+                ON dpdd.id_master_barang = mb.barang_id
+            JOIN md_satuan ms 
+                ON mb.id_satuan_kecil = ms.mst_id
+            JOIN md_unit mu
+                ON hpd.id_master_unit_tujuan = mu.id
+            LEFT JOIN dt_purchase_order_detail dpo
+                ON dpo.id_permintaan_distribusi = hpd.pd_id
+            WHERE dpdd.qty_real IS NOT NULL
+            AND hpd.deleted_at IS NULL
+            AND hpd.id_master_unit_tujuan = ?
+            AND dpo.id IS NULL
+        `,
+        [header.id_unit]
+        );
+
+
+        for (const d of details) {
+            await conn.query(`
+                INSERT INTO dt_purchase_order_detail (
+                    id_po, id_barang, permintaan, harga_satuan, id_permintaan_pemesanan_detail, id_permintaan_distribusi
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            `, [
+                id_po,
+                d.id_barang,
+                d.qty,
+                d.barang_hpp,
+                d.pdd_id,
+                d.pd_id
             ]);
         }
 
