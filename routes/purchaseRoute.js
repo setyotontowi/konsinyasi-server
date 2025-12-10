@@ -2,6 +2,7 @@ import express from "express";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import {
   getUsedItems,
+  getUsedItemsBulk,
   listPurchaseOrders,
   createPurchaseOrder,
   updatePurchaseOrder,
@@ -16,6 +17,8 @@ const router = express.Router();
 
 // list used items
 router.get("/used-items", verifyToken, getUsedItems);
+
+router.get("/used-items-bulk", verifyToken, getUsedItemsBulk);
 
 // list purchase orders with filters
 router.get("/", verifyToken, listPurchaseOrders);

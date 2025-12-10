@@ -58,6 +58,61 @@ export const listUsedbarang = async ({ page = 1, limit = 20 }) => {
     return { rows, total: countRows[0].total };
 };
 
+// ----------------------
+//  USED ITEMS LIST BULK
+// ----------------------
+
+export const listUsedBarangBulk = async(id_unit) => {
+  try {
+
+    if (!id_unit) {
+      return res.status(400).json({ message: "id_unit (PBF) is required" });
+    }
+
+    const [rows] = await pool.query(
+      `
+      SELECT nama_barang, SUM(qty) as qty FROM (SELECT dpdd.pdd_id,
+        dpdd.pd_id,
+        dpdd.id_master_barang,
+        mb.barang_nama AS nama_barang,
+        dpdd.qty_real AS qty,
+        mb.barang_hpp AS barang_hpp,
+        td.waktu_kirim,
+        hpd.id_master_unit_tujuan AS id_pbf,
+        mu.nama AS nama_unit_pbf
+    FROM dt_permintaan_distribusi_detail dpdd
+    JOIN hd_permintaan_distribusi hpd 
+        ON hpd.pd_id = dpdd.pd_id
+    JOIN ts_distribusi td
+        ON td.id_permintaan_distribusi = hpd.pd_id
+    JOIN md_barang mb 
+        ON dpdd.id_master_barang = mb.barang_id
+    JOIN md_unit mu
+        ON hpd.id_master_unit_tujuan = mu.id
+    LEFT JOIN dt_purchase_order_detail dpo
+        ON dpo.id_permintaan_distribusi = hpd.pd_id
+    WHERE dpdd.qty_real IS NOT NULL
+        AND hpd.deleted_at IS NULL
+        AND hpd.id_master_unit_tujuan = ?
+        AND dpo.id IS NULL   -- exclude PD already in PO
+    ORDER BY dpdd.pdd_id DESC) tbl
+    GROUP BY tbl.id_master_barang 
+      `,
+      [id_unit]
+    );
+
+    return({
+      success: true,
+      rows: rows,
+    });
+
+  } catch (err) {
+    console.error("ERROR /get_list_purchased:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
 
 // ----------------------
 //  LIST PURCHASE ORDERS

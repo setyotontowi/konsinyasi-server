@@ -25,6 +25,22 @@ export const getUsedItems = async (req, res) => {
 };
 
 // --------------------------
+// GET USED ITEMS BULK
+// --------------------------
+export const getUsedItemsBulk = async (req, res) => {
+    try {
+        const id_unit = +req.query.id_unit || null;
+
+        const { rows } = await PurchaseModel.listUsedBarangBulk(id_unit);
+
+        return sendResponse(res, { rows }, "Used items loaded");
+    } catch (err) {
+        return sendResponse(res, { error: err.message }, "Failed to load used items", 500);
+    }
+};
+
+
+// --------------------------
 // LIST PURCHASE ORDERS
 // --------------------------
 export const listPurchaseOrders = async (req, res) => {
