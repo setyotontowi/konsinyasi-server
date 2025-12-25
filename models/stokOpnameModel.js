@@ -544,4 +544,40 @@ export const updateStokOpname = async (id, data, id_users) => {
   }
 };
 
+export const getSerialNumbers = async (id_barang, id_stok_opname_detail) => {
+  if (!id_barang) {
+    throw new Error("id_barang is required");
+  }
+
+  const params = [];
+  let whereClause = "WHERE id_barang = ?";
+
+  params.push(id_barang);
+
+  if (id_stok_opname_detail) {
+    whereClause += " AND id_stok_opname_detail = ?";
+    params.push(id_stok_opname_detail);
+  }
+
+  const [rows] = await pool.query(
+    `
+    SELECT
+      id,
+      id_stok_opname_detail,
+      id_barang,
+      ed,
+      nobatch,
+      serial_number,
+      is_used,
+      created_at
+    FROM ch_serial_number
+    ${whereClause}
+    ORDER BY created_at ASC
+    `,
+    params
+  );
+
+  return rows;
+};
+
 

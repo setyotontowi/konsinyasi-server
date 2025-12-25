@@ -7,7 +7,8 @@ import {
     getEDListByBarang, 
     getNoBatchListByBarangAndEd,
     checkStock, 
-    updateStokOpnameController
+    updateStokOpnameController,
+    getSerialNumber
 } from "../controllers/stokOpnameController.js";
 import { getHistoryStok, getAllStok } from "../controllers/stokController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -23,6 +24,7 @@ router.get("/barang/:id/eds", getEDListByBarang);
 router.get("/barang/:id/nobatch", getNoBatchListByBarangAndEd);
 router.get("/check-stock", checkStock);
 router.get("/get-all-stok", verifyToken, getAllStok);
+router.get("/serial-number", verifyToken, getSerialNumber);
 
 router.get("/journal", verifyToken, getHistoryStok);
 

@@ -1,5 +1,5 @@
 // controllers/stokOpnameController.js
-import { createStokOpname, getAllStokOpname, getStokOpnameById, updateStokOpname } from "../models/stokOpnameModel.js";
+import { createStokOpname, getAllStokOpname, getStokOpnameById, updateStokOpname, getSerialNumbers } from "../models/stokOpnameModel.js";
 import { sendResponse, sendPaginatedResponse } from "../helpers/responseHelper.js";
 import { GROUP_VENDOR } from "../helpers/utilHelper.js";
 
@@ -207,3 +207,27 @@ export const updateStokOpnameController = async (req, res) => {
     });
   }
 };
+
+export const getSerialNumber = async (req, res) => {
+  try {
+    // filter by barang or id_stok_opname_detail
+    const { id_barang, id_stok_opname_detail } = req.query;
+
+    if (!id_barang && !id_stok_opname_detail) {
+      return res.status(400).json({
+        success: false,
+        message: "Parameter 'id_barang' atau 'id_stok_opname_detail' wajib diisi"
+      });
+    }
+
+    const rows = await getSerialNumbers(id_barang, id_stok_opname_detail);
+
+    return sendResponse(res, rows);
+  } catch (err) {
+    console.error("getSerialNumber error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Gagal mengambil serial number",
+    });
+  }
+}
