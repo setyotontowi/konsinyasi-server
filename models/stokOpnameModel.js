@@ -37,6 +37,7 @@ export const createStokOpname = async (data, id_users) => {
     );
 
     const so_id = headerResult.insertId;
+    let serialNumberMap = []; // consist of {id_stok_opname_detail, id_barang, ed, nobatch, serial_numbers[]}
 
     // Part 2: Loop through each item sequentially
     for (const item of details) {
@@ -137,6 +138,21 @@ export const createStokOpname = async (data, id_users) => {
 
       const insertedId = result.insertId;
 
+       // map Serial Number
+      if (Array.isArray(item.serial_numbers) && item.serial_numbers.length > 0) {
+        for (const sn of item.serial_numbers) {
+          serialNumberMap.push({
+            id_stok_opname_detail: insertedId,
+            id_master_barang: item.id_master_barang,
+            ed: item.ed,
+            nobatch: item.nobatch,
+            serial_number: sn,
+            id_users,
+            id_master_unit
+          });
+        }
+      }
+
       // 2️⃣ Insert actual opname record
       const actualData = {
         id_barang: item.id_master_barang,
@@ -152,6 +168,28 @@ export const createStokOpname = async (data, id_users) => {
         id_users
       };
       await insertRecord(conn, actualData);
+    }
+
+    // Part 3: Insert Serial Number
+    if (serialNumberMap.length > 0) {
+      const values = serialNumberMap.map(sn => [
+        sn.id_stok_opname_detail,
+        sn.id_master_barang,
+        sn.ed,
+        sn.nobatch,
+        sn.serial_number,
+
+      ]);
+
+      await conn.query(
+        `
+        INSERT INTO ch_serial_number
+          (id_stok_opname_detail, id_barang, ed, nobatch,
+          serial_number)
+        VALUES ?
+        `,
+        [values]
+      );
     }
 
     await conn.commit();
