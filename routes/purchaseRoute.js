@@ -10,6 +10,7 @@ import {
   deletePurchaseOrder,
   printPurchaseOrder,
   confirmPurchaseOrder,
+  getPurchaseOrderDetail,
 } from "../controllers/purchaseController.js";
 
 const router = express.Router();
@@ -23,6 +24,9 @@ router.get("/used-items-bulk", verifyToken, getUsedItemsBulk);
 
 // list purchase orders with filters
 router.get("/", verifyToken, listPurchaseOrders);
+
+// list purchase orders with filters
+router.get("/:id_po", verifyToken, getPurchaseOrderDetail);
 
 // create purchase order
 router.post("/", verifyToken, createPurchaseOrder);

@@ -71,6 +71,27 @@ export const listPurchaseOrders = async (req, res) => {
 };
 
 // --------------------------
+// GET PURCHASE ORDER DETAIL
+// --------------------------
+export const getPurchaseOrderDetail = async (req, res) => {
+    try {
+        const id = req.params.id_po;
+        const {po, detailRows} = await PurchaseModel.getPurchaseOrder(id_po);
+
+        if (!po) {
+            return sendResponse(res, {}, "Purchase order not found", 404);
+        }
+
+
+        return sendResponse(res, { po, items: detailRows }, "Purchase order loaded");
+    } catch (err) {
+        return sendResponse(res, { error: err.message }, "Failed to load purchase order", 500);
+    }
+};
+// --------------------------
+
+
+// --------------------------
 // CREATE PURCHASE ORDER
 // --------------------------
 export const createPurchaseOrder = async (req, res) => {

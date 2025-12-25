@@ -223,6 +223,49 @@ export const listPurchaseOrders = async ({ page = 1, limit = 20, filters }) => {
 };
 
 
+// ----------------------
+//  GET PURCHASE ORDERS DETAIL
+// ----------------------
+export const getPurchaseOrder = async (id_po) => {
+    const offset = (page - 1) * limit;
+
+    const [poRows] = await pool.query(`
+        SELECT 
+            hpo.*,
+            hpd.nomor_rm,
+            hpd.nama_pasien,
+            hpd.nama_ruang,
+            hpd.diagnosa,
+            mu_asal.nama AS unit_asal,
+            mu_tujuan.nama AS unit_tujuan
+        FROM hd_purchase_order hpo
+        LEFT JOIN hd_permintaan_distribusi hpd
+            ON hpo.id_permintaan_distribusi = hpd.pd_id
+        LEFT JOIN md_unit mu_asal
+            ON hpd.id_master_unit = mu_asal.id
+        LEFT JOIN md_unit mu_tujuan
+            ON hpd.id_master_unit_tujuan = mu_tujuan.id
+        WHERE hpo.id = ?
+    `, [id_po]);
+
+    if (poRows.length === 0)
+        return sendResponse(res, {}, "Purchase order not found", 404);
+
+    const po = poRows[0];
+
+    const [detailRows] = await pool.query(
+        `SELECT pod.*, b.barang_nama as nama_barang, s.mst_nama as satuan
+        FROM dt_purchase_order_detail pod
+        JOIN md_barang b on pod.id_barang = b.barang_id
+        JOIN md_satuan s on b.id_satuan_kecil = s.mst_id
+        WHERE id_po = ?`,
+        [id_po]
+    );
+
+    return { po, detailRows };
+};
+
+
 
 // ----------------------
 //  CREATE PURCHASE ORDER
