@@ -388,16 +388,6 @@ export const updateStokOpname = async (id, data, id_users) => {
     if (ids.length > 0) {
       const placeholders = ids.map(() => "?").join(",");
 
-      // Delete related details
-      await conn.query(
-        `UPDATE dt_stok_opname_detail 
-         SET
-          id_stok_opname = null,
-          deleted_at = NOW()
-         WHERE id_stok_opname = ? AND id_master_barang IN (${placeholders})`,
-        [id, ...ids]
-      );
-
       // Delete stok history linked to those items
       await conn.query(
         `UPDATE ts_history_stok 
@@ -423,7 +413,30 @@ export const updateStokOpname = async (id, data, id_users) => {
          )`,
         [id, ...ids]
       );
+
+      // Delete stok history linked to those items
+      await conn.query(
+        `DELETE FROM ch_serial_number 
+         WHERE id_stok_opname_detail IN (
+            SELECT id FROM dt_stok_opname_detail 
+            WHERE id_stok_opname = ? 
+         )`,
+        [id]
+      );
+
+      // Delete related details
+      await conn.query(
+        `UPDATE dt_stok_opname_detail 
+         SET
+          id_stok_opname = null,
+          deleted_at = NOW()
+         WHERE id_stok_opname = ? AND id_master_barang IN (${placeholders})`,
+        [id, ...ids]
+      );
+
     }
+
+    let serialNumberMap = [];
 
     // Recreate ONLY editable item details
     for (const item of editableItems) {
@@ -514,6 +527,21 @@ export const updateStokOpname = async (id, data, id_users) => {
 
       const insertedId = result.insertId;
 
+      // map Serial Number
+      if (Array.isArray(item.serial_numbers) && item.serial_numbers.length > 0) {
+        for (const sn of item.serial_numbers) {
+          serialNumberMap.push({
+            id_stok_opname_detail: insertedId,
+            id_master_barang: item.id_master_barang,
+            ed: item.ed,
+            nobatch: item.nobatch,
+            serial_number: sn,
+            id_users,
+            id_master_unit
+          });
+        }
+      }
+
       // Record the actual opname entry
       await insertRecord(conn, {
         id_barang: item.id_master_barang,
@@ -529,6 +557,28 @@ export const updateStokOpname = async (id, data, id_users) => {
         id_users,
         id_master_unit,
       });
+    }
+
+    // Part 3: Insert Serial Number
+    if (serialNumberMap.length > 0) {
+      const values = serialNumberMap.map(sn => [
+        sn.id_stok_opname_detail,
+        sn.id_master_barang,
+        sn.ed,
+        sn.nobatch,
+        sn.serial_number,
+
+      ]);
+
+      await conn.query(
+        `
+        INSERT INTO ch_serial_number
+          (id_stok_opname_detail, id_barang, ed, nobatch,
+          serial_number)
+        VALUES ?
+        `,
+        [values]
+      );
     }
 
     await conn.commit();
