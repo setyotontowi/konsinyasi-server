@@ -594,7 +594,7 @@ export const updateStokOpname = async (id, data, id_users) => {
   }
 };
 
-export const getSerialNumbers = async (id_barang, id_stok_opname_detail) => {
+export const getSerialNumbers = async (id_barang, id_stok_opname_detail, is_used) => {
   if (!id_barang) {
     throw new Error("id_barang is required");
   }
@@ -608,6 +608,27 @@ export const getSerialNumbers = async (id_barang, id_stok_opname_detail) => {
     whereClause += " AND id_stok_opname_detail = ?";
     params.push(id_stok_opname_detail);
   }
+
+  if (is_used) {
+    whereClause += " AND is_used = ?";
+    params.push(is_used);
+  }
+
+  console.log( `
+    SELECT
+      id,
+      id_stok_opname_detail,
+      id_barang,
+      ed,
+      nobatch,
+      serial_number,
+      is_used,
+      created_at
+    FROM ch_serial_number
+    ${whereClause}
+    ORDER BY created_at ASC
+    `,
+    params)
 
   const [rows] = await pool.query(
     `

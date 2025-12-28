@@ -211,16 +211,18 @@ export const updateStokOpnameController = async (req, res) => {
 export const getSerialNumber = async (req, res) => {
   try {
     // filter by barang or id_stok_opname_detail
-    const { id_barang, id_stok_opname_detail } = req.query;
+    const { id_barang, id_stok_opname_detail, is_used } = req.query;
 
-    if (!id_barang && !id_stok_opname_detail) {
+    if (!id_barang) {
       return res.status(400).json({
         success: false,
         message: "Parameter 'id_barang' atau 'id_stok_opname_detail' wajib diisi"
       });
     }
 
-    const rows = await getSerialNumbers(id_barang, id_stok_opname_detail);
+    console.log("sampai");
+
+    const rows = await getSerialNumbers(id_barang, id_stok_opname_detail, is_used);
 
     return sendResponse(res, rows);
   } catch (err) {
