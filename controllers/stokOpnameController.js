@@ -220,8 +220,6 @@ export const getSerialNumber = async (req, res) => {
       });
     }
 
-    console.log("sampai");
-
     const rows = await getSerialNumbers(id_barang, id_stok_opname_detail, is_used);
 
     return sendResponse(res, rows);

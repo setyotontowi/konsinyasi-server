@@ -168,7 +168,6 @@ export const pemakaianBarang = async (req, res) => {
 
     const id = req.params
     data.id_users = req.user.id
-    data.id_master_unit = req.user.id_master_unit
 
     const updated = await PermintaanModel.pemakaianBarang(id, data);
     if (!updated) {

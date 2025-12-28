@@ -8,7 +8,6 @@ export const calculateStok = async (data) => {
 
     const {id_barang, ed, nobatch} = data
 
-    console.log("calculate stok data", data);
 
     const missing = [];
     if (!id_barang) missing.push("id_barang");
@@ -70,7 +69,6 @@ export const insertRecord = async (conn, data) => {
     id_master_unit,
   } = data;
 
-  console.log("Insert record", data)
 
   // Prepare dynamic columns
   let id_stok_opname_detail = null;
@@ -117,10 +115,10 @@ export const insertNewTransaction = async (conn, data) => {
     masuk = 0,
     keluar = 0,
     id_users,
-    id_master_unit
+    id_master_unit,
+    serial_number,
   } = data;
 
-  console.log("Insert new transaction", data)
 
   // Get candidate stok (FIFO: earliest ED)
   const rows = await conn.query(
@@ -155,6 +153,9 @@ export const insertNewTransaction = async (conn, data) => {
   if (tipe === "pemakaian") {
     stokData.transaksi = "pemakaian";
     stokData.id_penerimaan_distribusi = id;
+    stokData.keterangan = await getKeterangan(id_master_unit, serial_number);
+
+    await updateUsedSerialNumber(serial_number);
   }
 
 
@@ -207,7 +208,6 @@ export const stokLive = async (conn, data) => {
     [id_barang, ed, nobatch]
   );
 
-  console.log("currentData", currentData);
 
   if (baru && (!currentData || currentData.length === 0)) {
     await conn.query(
@@ -223,7 +223,6 @@ export const stokLive = async (conn, data) => {
   if (currentData && currentData.length > 0) {
     const stokLive = currentData[0];
     const stokLiveSisa = toNumber(stokLive.sisa) + masuk - keluar; 
-    console.log("stok live sisa", stokLiveSisa, masuk, keluar);
     const is_valid = stokLiveSisa === stok_sesudah ? 1 : 0;
 
     await conn.query(
@@ -357,7 +356,6 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
     params.push(`%${search}%`);
   }
 
-  console.log(where, params)
 
   // Count with filter
   const [countRows] = await pool.query(
@@ -390,3 +388,30 @@ export const getStokLive = async ({ page = 1, limit = 20, filters = {} }) => {
     },
   };
 };
+
+export const getKeterangan = async (id_unit, ids_serial_number) => {
+  const [unitRows] = await pool.query(
+    `SELECT nama FROM md_unit WHERE id = ?`,
+    [id_unit]
+  );
+
+  const [serialRows] = await pool.query(
+    `SELECT serial_number FROM ch_serial_number WHERE id IN (?)`,
+    [ids_serial_number]
+  );
+
+  const unitName = unitRows?.[0]?.nama || '';
+
+  return `Pemakaian di Unit ${unitName} dengan SN: ${serialRows
+    .map(sn => sn.serial_number)
+    .join(', ')}`;
+}
+
+export const updateUsedSerialNumber = async (ids_serial_number) => {
+  await pool.query(
+    `UPDATE ch_serial_number 
+     SET is_used = 1 
+     WHERE id IN (?)`,
+    [ids_serial_number]
+  );
+}

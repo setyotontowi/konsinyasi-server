@@ -357,8 +357,6 @@ export const pemakaianBarang = async (pd_id, data) => {
       item.id_users = data.id_users
       item.id_master_unit = data.id_master_unit
 
-      console.log(item);
-
       // Insert into journal
       await insertNewTransaction(conn, item)
       

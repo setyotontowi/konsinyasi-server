@@ -81,7 +81,6 @@ const offset = (page - 1) * limit;
         JOIN md_unit ON md_barang.id_pabrik = md_unit.id ${whereSQL}`, params);
     const total = countRows[0].total;
 
-    console.log(whereSQL, params);
 
     const [rows] = await pool.query(`SELECT md_barang.*, md_satuan.mst_nama as nama_satuan, md_unit.nama as nama_pabrik FROM 
         md_barang
