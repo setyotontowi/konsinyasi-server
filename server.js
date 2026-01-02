@@ -9,9 +9,12 @@ import menuRoutes from "./routes/menuRoute.js"
 import distribusiRoutes from "./routes/distribusiRoute.js"
 import stokOpnameRoutes from "./routes/stokOpnameRoute.js"
 import purchaseRoutes from "./routes/purchaseRoute.js"
+import path from "path";
 
 const envFile = process.env.NODE_ENV === 'development' ? '.env.dev' : '.env';
 dotenv.config({ path: envFile, override: true });
+
+const __dirname = new URL('.', import.meta.url).pathname;
 
 const app = express();
 
@@ -34,6 +37,14 @@ app.use("/api/menu", menuRoutes);
 app.use("/api/distribusi", distribusiRoutes);
 app.use("/api/inventory", stokOpnameRoutes);
 app.use("/api/purchase", purchaseRoutes);
+
+/* ========= REACT STATIC ========= */
+app.use(express.static(path.join(__dirname, "dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
 
 app.listen(process.env.PORT, () => {
   console.log(`✅ Server running on port ${process.env.PORT}`);
